@@ -72,7 +72,7 @@ td.tinyga-bulk-filename {
     text-overflow: ellipsis;
     white-space: nowrap;
 }
-td.tinyga-krakedsize {
+td.tinyga-optimized-size {
 	width: 170px;
 }
 .buttonWrap {
@@ -194,7 +194,7 @@ p.apiStatus {
 	border: 1px solid #ccc !important;
 }
 
-td.tinyga-krakedsize {
+td.tinyga-optimized-size {
 	text-align: left;
 }
 tr.tinyga-item-row td {
@@ -346,26 +346,6 @@ td.tinygaAdvancedSettings h3 span.tinyga-advanced-toggle {
 
 .tinyga.error.settings-error, .tinyga.updated.settings-error  {
 	margin-bottom: 30px;
-}
-.blog-kraker-info-block-wrap {
-	margin-top: 10px;
-	margin-left: 10px;
-	padding-bottom: 110px;
-	width: 600px;
-}
-.blog-kraker-image-summary {
-	width: 50%;
-	float: left;
-}
-.blog-kraker-tinyga-statistics {
-	width: 50%;
-	float: right;
-}
-input[name=blog_kraker_mode] {
-	margin-right: 10px;
-}
-label[for=blog_kraker_mode_thumbs] {
-	margin-right: 10px;
 }
 .tinyga-item-details {
 	cursor: pointer;

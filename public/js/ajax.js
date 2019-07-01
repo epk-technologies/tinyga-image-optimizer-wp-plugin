@@ -11,7 +11,7 @@ jQuery(document).ready(function($) {
             activeId = $(this).data('id');
             return $(this).attr('original-title');
         }
-    }
+    };
 
     $('.tinygaWhatsThis').tipsy({
         fade: true,
@@ -34,7 +34,7 @@ jQuery(document).ready(function($) {
         $bottomBulkActionDropdown = $(".tablenav.bottom .bulkactions select[name='action2']");
 
 
-    var requestSuccess = function(data, textStatus, jqXHR) {
+    var requestSuccess = function(data) {
         var $button = $(this),
             $parent = $(this).closest('.tinyga-wrap, .buttonWrap'),
             $cell = $(this).closest("td");
@@ -42,10 +42,8 @@ jQuery(document).ready(function($) {
         if (data.html) {
             $button.text("Image optimized");
 
-            var type = data.type,
-                originalSize = data.original_size,
-                $originalSizeColumn = $(this).parent().prev("td.original_size"),
-                krakedData = '';
+            var originalSize = data.original_size,
+                $originalSizeColumn = $(this).parent().prev("td.original_size");
 
             $parent.fadeOut("fast", function() {
                 $cell
@@ -83,11 +81,11 @@ jQuery(document).ready(function($) {
         }
     };
 
-    var requestFail = function(jqXHR, textStatus, errorThrown) {
+    var requestFail = function() {
         $(this).removeAttr("disabled");
     };
 
-    var requestComplete = function(jqXHR, textStatus, errorThrown) {
+    var requestComplete = function() {
         $(this).removeAttr("disabled");
         $(this)
             .parent()
@@ -105,8 +103,7 @@ jQuery(document).ready(function($) {
         var $rows = $("tr[id^='post-']"),
             $row = null,
             postId = 0,
-            imageDateItem = {},
-            $krakBtn = null,
+            $optimizeBtn = null,
             btnData = {},
             originalSize = '',
             rv = [];
@@ -114,9 +111,9 @@ jQuery(document).ready(function($) {
             $row = $(this);
             postId = this.id.replace(/^\D+/g, '');
             if ($row.find("input[type='checkbox'][value='" + postId + "']:checked").length) {
-                $krakBtn = $row.find(".tinyga_req");
-                if ($krakBtn.length) {
-                    btnData = $krakBtn.data();
+                $optimizeBtn = $row.find(".tinyga_req");
+                if ($optimizeBtn.length) {
+                    btnData = $optimizeBtn.data();
                     originalSize = $.trim($row.find('td.original_size').text());
                     btnData.originalSize = originalSize;
                     rv.push(btnData);
@@ -138,7 +135,7 @@ jQuery(document).ready(function($) {
         var setting = tinyga_settings.api_lossy;
         var nImages = bulkImageData.length;
         var header = '<p class="tinygaBulkHeader">Tinyga Bulk Image Optimization <span class="close-tinyga-bulk">&times;</span></p>';
-        var krakEmAll = '<button class="tinyga_req_bulk">Tinyga \'em all</button>';
+        var optimizeAll = '<button class="tinyga_req_bulk">Tinyga - optimize all</button>';
         var typeRadios = '<div class="radiosWrap"><p>Choose optimization mode:</p><label><input type="radio" id="tinyga-bulk-type-lossy" value="Lossy" name="tinyga-bulk-type"/>Intelligent Lossy</label>&nbsp;&nbsp;&nbsp;<label><input type="radio" id="tinyga-bulk-type-lossless" value="Lossless" name="tinyga-bulk-type"/>Lossless</label></div>';
 
         var $modal = $('<div id="tinyga-bulk-modal" class="tinyga-modal"></div>')
@@ -188,12 +185,12 @@ jQuery(document).ready(function($) {
 
         $table.append($headerRow);
         $.each(bulkImageData, function(index, element) {
-            $table.append('<tr class="tinyga-item-row" data-tinygabulkid="' + element.id + '"><td class="tinyga-bulk-filename">' + element.filename + '</td><td class="tinyga-originalsize">' + element.originalSize + '</td><td class="tinyga-krakedsize"><span class="tinygaBulkSpinner hidden"></span></td></tr>');
+            $table.append('<tr class="tinyga-item-row" data-tinygabulkid="' + element.id + '"><td class="tinyga-bulk-filename">' + element.filename + '</td><td class="tinyga-originalsize">' + element.originalSize + '</td><td class="tinyga-optimized-size"><span class="tinygaBulkSpinner hidden"></span></td></tr>');
         });
 
         $modal
             .append($table)
-            .append(krakEmAll);
+            .append(optimizeAll);
 
         $(".close-tinyga-bulk").click(function() {
             $.kmodal.close();
@@ -219,8 +216,8 @@ jQuery(document).ready(function($) {
                 filename = task.filename;
 
             var $row = $bulkTable.find("tr[data-tinygabulkid='" + id + "']"),
-                $krakedSizeColumn = $row.find(".tinyga-krakedsize"),
-                $spinner = $krakedSizeColumn
+                $optimizedSizeColumn = $row.find(".tinyga-optimized-size"),
+                $spinner = $optimizedSizeColumn
                 .find(".tinygaBulkSpinner")
                 .css({
                     display: "inline-block"
@@ -244,13 +241,13 @@ jQuery(document).ready(function($) {
                     if (data.success && typeof data.message === 'undefined') {
                         var type = data.type,
                             originalSize = data.original_size,
-                            krakedSize = data.html,
+                            optimizedSize = data.html,
                             savingsPercent = data.savings_percent,
                             savingsBytes = data.saved_bytes;
 
-                        $krakedSizeColumn.html(data.html);
+                        $optimizedSizeColumn.html(data.html);
 
-                        $krakedSizeColumn
+                        $optimizedSizeColumn
                             .find('.tinyga-item-details')
                             .remove();
 
@@ -277,7 +274,7 @@ jQuery(document).ready(function($) {
 
                     } else if (data.error) {
                         if (data.error === 'This image can not be optimized any further') {
-                            $krakedSizeColumn.text('No savings found.');
+                            $optimizedSizeColumn.text('No savings found.');
                         } else {
 
                         }
@@ -338,13 +335,14 @@ jQuery(document).ready(function($) {
     var activeId = null;
     $('.tinyga-item-details').tipsy(tipsySettings);
 
-    var $activePopup = null;
-    $('body').on('click', '.tinyga-item-details', function(e) {
+    var $body = $('body');
+
+    $body.on('click', '.tinyga-item-details', function(e) {
         //$('.tipsy[class="tipsy-' + activeId + '"]').remove();
 
         var id = $(this).data('id');
         $('.tipsy').remove();
-        if (id == activeId) {
+        if (id === activeId) {
             activeId = null;
             $(this).text('Show details');
             return;
@@ -354,18 +352,19 @@ jQuery(document).ready(function($) {
         $(this).text('Hide details');
     });
 
-    $('body').on('click', function(e) {
+    $body.on('click', function(e) {
         var $t = $(e.target);
+
         if (($t.hasClass('tipsy') || $t.closest('.tipsy').length) || $t.hasClass('tinyga-item-details')) {
             return;
-        } else {
-            activeId = null;
-            $('.tinyga-item-details').text('Show details');
-            $('.tipsy').remove();
         }
+
+        activeId = null;
+        $('.tinyga-item-details').text('Show details');
+        $('.tipsy').remove();
     });
 
-    $('body').on('click', 'small.tinygaReset', function(e) {
+    $body.on('click', 'small.tinygaReset', function(e) {
         e.preventDefault();
         var $resetButton = $(this);
         var resetData = {
@@ -373,7 +372,7 @@ jQuery(document).ready(function($) {
         };
 
         resetData.id = $(this).data("id");
-        $row = $('#post-' + resetData.id).find('.kraked_size');
+        $row = $('#post-' + resetData.id).find('.tinyga_size');
 
         var $spinner = $('<span class="resetSpinner"></span>');
         $resetButton.after($spinner);
@@ -399,7 +398,7 @@ jQuery(document).ready(function($) {
             });
     });
 
-    $('body').on('click', '.tinyga-reset-all', function(e) {
+    $body.on('click', '.tinyga-reset-all', function(e) {
         e.preventDefault();
 
         var reset = confirm('This will immediately remove all Tinyga metadata associated with your images. \n\nAre you sure you want to do this?');
@@ -435,23 +434,7 @@ jQuery(document).ready(function($) {
             });
     });
 
-    // $('.tinygaAdvancedSettings h3').on('click', function () {
-    //     var $rows = $('.tinyga-advanced-settings');
-    //     var $plusMinus = $('.tinyga-plus-minus');
-    //     if ($rows.is(':visible')) {
-    //         $rows.hide();
-    //         $plusMinus
-    //             .removeClass('dashicons-arrow-down')
-    //             .addClass('dashicons-arrow-right');
-    //     } else {
-    //         $rows.show();
-    //         $plusMinus
-    //             .removeClass('dashicons-arrow-right')
-    //             .addClass('dashicons-arrow-down');
-    //     }
-    // });
-
-    $('body').on("click", ".tinyga_req", function(e) {
+    $body.on("click", ".tinyga_req", function(e) {
         e.preventDefault();
         var $button = $(this),
             $parent = $(this).parent();

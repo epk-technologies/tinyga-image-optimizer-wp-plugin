@@ -18,7 +18,7 @@
 use Tinyga\Tinyga;
 
 define('TINYGA_DEV_MODE', true);
-define('TINYGA_TEST_MODE', false);
+define('TINYGA_TEST_MODE', true);
 define('TINYGA_API_ENDPOINT', 'http://127.0.0.1:8000/api/v1/');
 
 if (!defined('TINYGA_PLUGIN_FILE')) {
