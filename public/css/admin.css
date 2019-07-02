@@ -60,7 +60,7 @@
 .tinyga_req_bulk {
 	font-size: 16px;
 	margin: 0 auto;
-	width: 150px;
+	width: 180px;
 	padding: 10px 0;
 	display: block;
 }
@@ -203,9 +203,6 @@ tr.tinyga-item-row td {
 }
 span.tinyga-bulk-choose-type {
 	font-weight: bold;
-	margin-right: 5px;
-}
-#tinyga-bulk-type-lossy {
 	margin-right: 5px;
 }
 .close-tinyga-bulk {

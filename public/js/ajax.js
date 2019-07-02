@@ -1,3 +1,5 @@
+/* global ajax_object, tinyga_bulk_modal, tinyga_settings */
+
 jQuery(document).ready(function($) {
 
     var tipsySettings =  {
@@ -93,7 +95,7 @@ jQuery(document).ready(function($) {
             .css("display", "none");
     };
 
-    var opts = '<option value="tinyga-bulk-lossy">' + "Tinyga 'em all" + '</option>';
+    var opts = '<option value="tinyga-bulk-optimization">' + "Tinyga optimize all" + '</option>';
 
     $topBulkActionDropdown.find("option:last-child").before(opts);
     $bottomBulkActionDropdown.find("option:last-child").before(opts);
@@ -132,46 +134,25 @@ jQuery(document).ready(function($) {
     };
 
     var renderBulkImageSummary = function(bulkImageData) {
-        var setting = tinyga_settings.api_lossy;
+        var $modal = $(tinyga_bulk_modal['modal']);
+        var $modal_row = $(tinyga_bulk_modal['modal_row']);
         var nImages = bulkImageData.length;
-        var header = '<p class="tinygaBulkHeader">Tinyga Bulk Image Optimization <span class="close-tinyga-bulk">&times;</span></p>';
-        var optimizeAll = '<button class="tinyga_req_bulk">Tinyga - optimize all</button>';
-        var typeRadios = '<div class="radiosWrap"><p>Choose optimization mode:</p><label><input type="radio" id="tinyga-bulk-type-lossy" value="Lossy" name="tinyga-bulk-type"/>Intelligent Lossy</label>&nbsp;&nbsp;&nbsp;<label><input type="radio" id="tinyga-bulk-type-lossless" value="Lossless" name="tinyga-bulk-type"/>Lossless</label></div>';
 
-        var $modal = $('<div id="tinyga-bulk-modal" class="tinyga-modal"></div>')
-                .html(header)
-                .append(typeRadios)
-                .append('<p class="the-following">The following <strong>' + nImages + '</strong> images will be optimized by Tinyga.io using the <strong class="bulkSetting">' + setting + '</strong> setting:</p>')
-                .appendTo("body")
-                .kmodal(bulkModalOptions)
-                .bind($.kmodal.BEFORE_CLOSE, function(event, modal) {
+        $modal.find(".tinyga-modal-image-count").html(nImages);
 
-                })
-                .bind($.kmodal.OPEN, function(event, modal) {
-
-                })
-                .bind($.kmodal.CLOSE, function(event, modal) {
-                    $("#tinyga-bulk-modal").remove();
-                })
-                .css({
-                    top: "10px",
-                    marginTop: "40px"
-                });
-
-        if (setting === "lossy") {
-            $("#tinyga-bulk-type-lossy").attr("checked", true);
-        } else {
-            $("#tinyga-bulk-type-lossless").attr("checked", true);
-        }
-
-        $bulkSettingSpan = $(".bulkSetting");
-        $("input[name='tinyga-bulk-type']").change(function() {
-            var text = this.id === "tinyga-bulk-type-lossy" ? "lossy" : "lossless";
-            $bulkSettingSpan.text(text);
-        });
+        $modal
+            .appendTo("body")
+            .kmodal(bulkModalOptions)
+            .bind($.kmodal.CLOSE, function() {
+                $("#tinyga-bulk-modal").remove();
+            })
+            .css({
+                top: "10px",
+                marginTop: "40px"
+            });
 
         // to prevent close on clicking overlay div
-        $(".jquery-modal.blocker").click(function(e) {
+        $(".jquery-modal.blocker").on("click", function() {
             return false;
         });
 
@@ -180,19 +161,18 @@ jQuery(document).ready(function($) {
             "z-index": 1
         });
 
-        var $table = $('<table id="tinyga-bulk"></table>'),
-            $headerRow = $('<tr class="tinyga-bulk-header"><td>File Name</td><td style="width:120px">Original Size</td><td style="width:120px">Tinyga.io Stats</td></tr>');
+        var $table = $modal.find("#tinyga-bulk");
 
-        $table.append($headerRow);
         $.each(bulkImageData, function(index, element) {
-            $table.append('<tr class="tinyga-item-row" data-tinygabulkid="' + element.id + '"><td class="tinyga-bulk-filename">' + element.filename + '</td><td class="tinyga-originalsize">' + element.originalSize + '</td><td class="tinyga-optimized-size"><span class="tinygaBulkSpinner hidden"></span></td></tr>');
+            var $row = $modal_row.clone();
+            $row.data('tinyga-bulk-id', element.id)
+                .attr('data-tinyga-bulk-id', element.id)
+            $row.find('.tinyga-bulk-filename').html(element.filename)
+            $row.find('.tinyga-original-size').html(element.originalSize);
+            $table.append($row);
         });
 
-        $modal
-            .append($table)
-            .append(optimizeAll);
-
-        $(".close-tinyga-bulk").click(function() {
+        $(".close-tinyga-bulk").on("click", function() {
             $.kmodal.close();
         });
 
@@ -208,20 +188,15 @@ jQuery(document).ready(function($) {
 
     var bulkAction = function(bulkImageData) {
 
-        $bulkTable = $("#tinyga-bulk");
+        var $bulkTable = $("#tinyga-bulk");
         var jqxhr = null;
 
         var q = async.queue(function(task, callback) {
-            var id = task.id,
-                filename = task.filename;
+            var id = task.id;
 
-            var $row = $bulkTable.find("tr[data-tinygabulkid='" + id + "']"),
+            var $row = $bulkTable.find("tr[data-tinyga-bulk-id='" + id + "']"),
                 $optimizedSizeColumn = $row.find(".tinyga-optimized-size"),
-                $spinner = $optimizedSizeColumn
-                .find(".tinygaBulkSpinner")
-                .css({
-                    display: "inline-block"
-                }),
+                $spinner = $optimizedSizeColumn.find(".tinygaBulkSpinner").css({display: "inline-block"}),
                 $savingsPercentColumn = $row.find(".tinyga-savingsPercent"),
                 $savingsBytesColumn = $row.find(".tinyga-savings");
 
@@ -230,61 +205,57 @@ jQuery(document).ready(function($) {
                 data: {
                     'action': 'tinyga_request',
                     'id': id,
-                    'type': $("input[name='tinyga-bulk-type']:checked").val().toLowerCase(),
+                    'quality': $("#tinyga-bulk-quality option:selected").val(),
                     'origin': 'bulk_optimizer'
                 },
                 type: "post",
                 dataType: "json",
                 timeout: 360000
             })
-                .done(function(data, textStatus, jqXHR) {
-                    if (data.success && typeof data.message === 'undefined') {
-                        var type = data.type,
-                            originalSize = data.original_size,
-                            optimizedSize = data.html,
-                            savingsPercent = data.savings_percent,
-                            savingsBytes = data.saved_bytes;
+            .done(function(data) {
+                if (data.success && !data.message) {
+                    var originalSize = data.original_size,
+                        savingsPercent = data.savings_percent,
+                        savingsBytes = data.saved_bytes;
 
-                        $optimizedSizeColumn.html(data.html);
+                    $optimizedSizeColumn.html(data.html);
 
-                        $optimizedSizeColumn
+                    $optimizedSizeColumn
+                        .find('.tinyga-item-details')
+                        .remove();
+
+                    $savingsPercentColumn.text(savingsPercent);
+                    $savingsBytesColumn.text(savingsBytes);
+
+                    var $button = $("button[id='tinygaid-" + id + "']"),
+                        $parent = $button.parent(),
+                        $cell = $button.closest("td"),
+                        $originalSizeColumn = $button.parent().prev("td.original_size");
+
+
+                    $parent.fadeOut("fast", function() {
+                        $cell.find(".noSavings, .tinygaErrorWrap").remove();
+                        $cell
+                            .empty()
+                            .html(data.html);
+                        $cell
                             .find('.tinyga-item-details')
-                            .remove();
+                            .tipsy(tipsySettings);
+                        $originalSizeColumn.html(originalSize);
+                        $parent.remove();
+                    });
 
-                        $savingsPercentColumn.text(savingsPercent);
-                        $savingsBytesColumn.text(savingsBytes);
+                } else if (data.error) {
+                    if (data.error === 'This image can not be optimized any further') {
+                        $optimizedSizeColumn.text('No savings found.');
+                    } else {
 
-                        var $button = $("button[id='tinygaid-" + id + "']"),
-                            $parent = $button.parent(),
-                            $cell = $button.closest("td"),
-                            $originalSizeColumn = $button.parent().prev("td.original_size");
-
-
-                        $parent.fadeOut("fast", function() {
-                            $cell.find(".noSavings, .tinygaErrorWrap").remove();
-                            $cell
-                                .empty()
-                                .html(data.html);
-                            $cell
-                                .find('.tinyga-item-details')
-                                .tipsy(tipsySettings);
-                            $originalSizeColumn.html(originalSize);
-                            $parent.remove();
-                        });
-
-                    } else if (data.error) {
-                        if (data.error === 'This image can not be optimized any further') {
-                            $optimizedSizeColumn.text('No savings found.');
-                        } else {
-
-                        }
                     }
-                })
-
+                }
+            })
             .fail(function() {
 
             })
-
             .always(function() {
                 $spinner.css({
                     display: "none"
@@ -304,7 +275,7 @@ jQuery(document).ready(function($) {
                 .click(function() {
                     $.kmodal.close();
                 });
-        }
+        };
 
         // add some items to the queue (batch-wise)
         q.push(bulkImageData, function(err) {
@@ -315,12 +286,12 @@ jQuery(document).ready(function($) {
 
     $btnApplyBulkAction.add($btnApplyBulkAction2)
         .click(function(e) {
-            if ($(this).prev("select").val() === 'tinyga-bulk-lossy') {
+            if ($(this).prev("select").val() === 'tinyga-bulk-optimization') {
                 e.preventDefault();
                 var bulkImageData = getBulkImageData();
                 renderBulkImageSummary(bulkImageData);
 
-                $('.tinyga_req_bulk').click(function(e) {
+                $('.tinyga_req_bulk').on("click", function(e) {
                     e.preventDefault();
                     $(this)
                         .attr("disabled", true)
@@ -337,9 +308,7 @@ jQuery(document).ready(function($) {
 
     var $body = $('body');
 
-    $body.on('click', '.tinyga-item-details', function(e) {
-        //$('.tipsy[class="tipsy-' + activeId + '"]').remove();
-
+    $body.on('click', '.tinyga-item-details', function() {
         var id = $(this).data('id');
         $('.tipsy').remove();
         if (id === activeId) {
@@ -372,30 +341,30 @@ jQuery(document).ready(function($) {
         };
 
         resetData.id = $(this).data("id");
-        $row = $('#post-' + resetData.id).find('.tinyga_size');
+        var $row = $('#post-' + resetData.id).find('.tinyga_size');
 
         var $spinner = $('<span class="resetSpinner"></span>');
         $resetButton.after($spinner);
 
-        var jqxhr = $.ajax({
-                url: ajax_object.ajax_url,
-                data: resetData,
-                type: "post",
-                dataType: "json",
-                timeout: 360000
-            })
-            .done(function(data, textStatus, jqXHR) {
-                if (data.success !== 'undefined') {
-                    $row
-                        .hide()
-                        .html(data.html)
-                        .fadeIn()
-                        .prev(".original_size.column-original_size")
-                        .html(data.original_size);
+        $.ajax({
+            url: ajax_object.ajax_url,
+            data: resetData,
+            type: "post",
+            dataType: "json",
+            timeout: 360000
+        })
+        .done(function(data) {
+            if (data.success !== 'undefined') {
+                $row
+                    .hide()
+                    .html(data.html)
+                    .fadeIn()
+                    .prev(".original_size.column-original_size")
+                    .html(data.original_size);
 
-                    $('.tipsy').remove();
-                }
-            });
+                $('.tipsy').remove();
+            }
+        });
     });
 
     $body.on('click', '.tinyga-reset-all', function(e) {
@@ -418,20 +387,19 @@ jQuery(document).ready(function($) {
         var $spinner = $('<span class="resetSpinner"></span>');
         $resetButton.after($spinner);
 
-        var jqxhr = $.ajax({
-                url: ajax_object.ajax_url,
-                data: resetData,
-                type: "post",
-                dataType: "json",
-                timeout: 360000
-            })
-            .done(function(data, textStatus, jqXHR) {
-                $spinner.remove();
-                $resetButton
-                    .text('Your images have been reset.')
-                    .removeAttr('disabled')
-                    .removeClass('enabled');
-            });
+        $.ajax({
+            url: ajax_object.ajax_url,
+            data: resetData,
+            type: "post",
+            dataType: "json",
+            timeout: 360000
+        }).done(function() {
+            $spinner.remove();
+            $resetButton
+                .text('Your images have been reset.')
+                .removeAttr('disabled')
+                .removeClass('enabled');
+        });
     });
 
     $body.on("click", ".tinyga_req", function(e) {
@@ -454,7 +422,7 @@ jQuery(document).ready(function($) {
             .css("display", "inline");
 
 
-        var jqxhr = $.ajax({
+        $.ajax({
             url: ajax_object.ajax_url,
             data: data,
             type: "post",
@@ -462,12 +430,8 @@ jQuery(document).ready(function($) {
             timeout: 360000,
             context: $button
         })
-
         .done(requestSuccess)
-
         .fail(requestFail)
-
         .always(requestComplete);
-
     });
 });

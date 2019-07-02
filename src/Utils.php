@@ -5,7 +5,7 @@ namespace Tinyga;
 class Utils
 {
     /**
-     * @param $name
+     * @param string $name
      * @param array $args
      * @param bool $return
      *
@@ -13,24 +13,35 @@ class Utils
      */
     public static function view($name, array $args = [], $return = false)
     {
-        foreach ($args AS $key => $val) {
-            $$key = $val;
-        }
-
         $file = TINYGA_PLUGIN_DIR . "views/{$name}.php";
 
-        ob_start();
-
-        /** @noinspection PhpIncludeInspection */
-        include $file;
-
-        $content = ob_get_clean();
+        $content = self::renderView($file, $args);
 
         if ($return) {
             return $content;
         }
 
         echo $content;
+    }
+
+    /**
+     * @param $file
+     * @param array $args
+     *
+     * @return false|string
+     */
+    public static function renderView($file, array $args = [])
+    {
+        foreach ($args AS $key => $val) {
+            $$key = $val;
+        }
+
+        ob_start();
+
+        /** @noinspection PhpIncludeInspection */
+        include $file;
+
+        return ob_get_clean();
     }
 
     /**
@@ -80,9 +91,13 @@ class Utils
      */
     public static function formatBytes($size, $precision = 2)
     {
-        $base = log($size, 1024);
         $suffixes = [' bytes', 'KB', 'MB', 'GB', 'TB'];
 
+        if ($size === 0) {
+            return $size . $suffixes[$size];
+        }
+
+        $base = log($size, 1024);
         return round(1024 ** ($base - floor($base)), $precision) . $suffixes[(int)floor($base)];
     }
 

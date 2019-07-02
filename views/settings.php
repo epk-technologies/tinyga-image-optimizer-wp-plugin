@@ -1,6 +1,8 @@
 <?php
 
-use Tinyga\Settings;
+use Tinyga\ImageOptimizer\OptimizationRequest;
+use Tinyga\Model\TinygaOptions;
+use Tinyga\Utils;
 
 // variables
 $result = $result ?: null;
@@ -8,12 +10,17 @@ $api_key = $api_key ?: null;
 $auto_optimize = $auto_optimize ?: null;
 $optimize_main_image = $optimize_main_image ?: null;
 $quality = $quality ?: null;
-$quality_range = $quality_range ?: null;
+$quality_max = OptimizationRequest::MAX_QUALITY;
+$quality_min = OptimizationRequest::MIN_QUALITY;
+$quality_range = range(OptimizationRequest::MAX_QUALITY, OptimizationRequest::MIN_QUALITY);
+$quality_lossless = OptimizationRequest::LOSSLESS_QUALITY;
+$quality_default = OptimizationRequest::DEFAULT_LOSSY_QUALITY;
 $sizes = $sizes ?: null;
 $valid_sizes = $valid_sizes ?: null;
 
+
 $option_name = static function($value) {
-    echo Settings::OPTION_TINYGA_OPTIONS . '[' . $value . ']';
+    return TinygaOptions::OPTION_NAME . '[' . $value . ']';
 }
 
 ?>
@@ -45,7 +52,7 @@ $option_name = static function($value) {
                 </th>
                 <td>
                     <input id="tinyga_api_key"
-                           name="<?php $option_name(Settings::TINYGA_OPTIONS_API_KEY) ?>"
+                           name="<?php echo $option_name('api_key') ?>"
                            type="text"
                            value="<?php echo esc_attr($api_key); ?>"
                            size="50">
@@ -58,7 +65,7 @@ $option_name = static function($value) {
                 <td>
                     <input type="checkbox"
                            id="auto_optimize"
-                           name="<?php $option_name(Settings::TINYGA_OPTIONS_AUTO_OPTIMIZE) ?>"
+                           name="<?php echo $option_name('auto_optimize') ?>"
                            value="1"
                            <?php checked(1, $auto_optimize, true); ?>/>
                 </td>
@@ -78,7 +85,7 @@ $option_name = static function($value) {
                 <td>
                     <input type="checkbox"
                            id="optimize_main_image"
-                           name="<?php $option_name(Settings::TINYGA_OPTIONS_OPTIMIZE_MAIN_IMAGE) ?>"
+                           name="<?php echo $option_name('optimize_main_image') ?>"
                            value="1"
                            <?php checked(1, $optimize_main_image, true); ?>/>
                 </td>
@@ -97,24 +104,18 @@ $option_name = static function($value) {
                     <label for="quality">Quality setting:</label>
                 </th>
                 <td>
-                    <select id="quality"
-                            name="<?php $option_name(Settings::TINYGA_OPTIONS_QUALITY) ?>">
-                        <option value="0">Intelligent lossy (recommended)</option>
-			            <?php foreach ($quality_range as $number) { ?>
-                            <option value="<?php echo $number ?>" <?php selected($quality, $number, true); ?>>
-					            <?php echo $number ?>
-                            </option>
-			            <?php } ?>
-                    </select>
+                    <?php Utils::view('parts/select_quality', [
+                        'name' => $option_name('quality'),
+                        'selected_quality' => $quality,
+                    ]); ?>
                 </td>
             </tr>
             <tr class="tip">
                 <td colspan="2">
                     <div>
-                        Advanced users can force the quality of JPEG images to a discrete "q" value between 25 and 100 using this setting <br />
+                        Advanced users can force the quality to a value between <?php echo $quality_min ?> and <?php echo $quality_max ?> with <?php echo $quality_lossless ?> being lossless <br />
                         For example, forcing the quality to 60 or 70 might yield greater savings, but the resulting quality might be affected, depending on the image. <br />
-                        We therefore recommend keeping the <strong>Intelligent Lossy</strong> setting, which will not allow a resulting image of unacceptable quality.<br />
-                        This setting will be ignored when using the <strong>lossless</strong> optimization mode.
+                        We therefore recommend keeping the default <strong><?php echo $quality_default ?></strong> setting, which will not allow a resulting image of unacceptable quality.<br />
                     </div>
                 </td>
             </tr>
@@ -133,13 +134,13 @@ $option_name = static function($value) {
                 <td>
                     <?php $i = 0; ?>
                     <?php foreach($sizes as $size) { ?>
-                        <?php $valid_size_key = Settings::TINYGA_OPTIONS_SIZES_PREFIX . $size ?>
-                        <?php $size_checked = isset($valid_sizes[$valid_size_key]) ? $valid_sizes[$valid_size_key] : 1; ?>
-                        <label for="<?php echo "tinyga_size_$size" ?>">
+                        <?php $size_checked = isset($valid_sizes[$size]) ? $valid_sizes[$size] : 1; ?>
+                        <?php $name = "tinyga_size_$size" ?>
+                        <label for="<?php echo $name ?>">
                             <input type="checkbox"
-                                   id="tinyga_size_<?php echo $size ?>"
-                                   name="<?php $option_name($valid_size_key) ?>"
-                                   value="1" <?php checked( 1, $size_checked, true ); ?>/>
+                                   id="<?php echo $name ?>"
+                                   name="<?php echo $option_name($name) ?>"
+                                   value="1" <?php checked(1, $size_checked, true); ?>/>
                             &nbsp;<?php echo $size ?>
                         </label>&nbsp;&nbsp;&nbsp;&nbsp;
                         <?php $i++ ?>

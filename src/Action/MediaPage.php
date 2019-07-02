@@ -2,19 +2,15 @@
 
 namespace Tinyga\Action;
 
-use Tinyga\Settings;
 use Tinyga\Utils;
 
-class MediaPage extends Settings
+class MediaPage extends StatsSummary
 {
-    use StatsSummaryTrait;
-
     /**
-     * Register action to event.
+     * @inheritDoc
      */
-    public function __construct()
+    protected function registerActions()
     {
-        parent::__construct();
         add_action('manage_media_custom_column', [&$this, 'fillMediaColumns'], 10, 2);
         add_filter('manage_media_columns', [&$this, 'addMediaColumns']);
     }
@@ -31,9 +27,9 @@ class MediaPage extends Settings
         // handle the case where file does not exist
         if ($original_size === 0 || $original_size === false) {
             echo '0 bytes';
-        } else if (strcmp($column_name, 'original_size') === 0) {
+        } else if (strcmp($column_name, 'tinyga_original_size') === 0) {
             $this->fillOriginalSizeColumn($id, $original_size);
-        } else if (strcmp($column_name, 'optimized_size') === 0) {
+        } else if (strcmp($column_name, 'tinyga_optimized_size') === 0) {
             $this->fillOptimizedSizeColumn($id);
         }
     }
@@ -45,8 +41,8 @@ class MediaPage extends Settings
      */
     public function addMediaColumns($columns)
     {
-        $columns['original_size'] = 'Original Size';
-        $columns['optimized_size'] = 'Tinyga Stats';
+        $columns['tinyga_original_size'] = 'Original Size';
+        $columns['tinyga_optimized_size'] = 'Tinyga Stats';
         return $columns;
     }
 
@@ -56,8 +52,8 @@ class MediaPage extends Settings
 
         if (wp_attachment_is_image($id)) {
             $meta = $this->getImageMeta($id);
-            if (isset($meta['original_size'])) {
-                $original_size = Utils::formatBytes($meta['original_size']);
+            if ($meta && $meta->getOriginalSize()) {
+                $original_size = Utils::formatBytes($meta->getOriginalSize());
             }
         }
 
@@ -73,16 +69,16 @@ class MediaPage extends Settings
         $is_optimize_this_image = false;
         $stats_summary = null;
         $meta = null;
-        $type = isset($this->settings['api_lossy']) ? $this->settings['api_lossy'] : 'lossy';
+        $optimization_quality = $this->tinyga_options->getQuality();
 
         if ($is_image) {
             $meta = $this->getImageMeta($id);
             $thumbs_meta = $this->getThumbsMeta($id);
-            $optimize_main_image = !empty($this->settings[self::TINYGA_OPTIONS_OPTIMIZE_MAIN_IMAGE]);
+            $optimize_main_image = $this->tinyga_options->isOptimizeMainImage();
 
             // Is it optimized? Show some stats
-            if (!empty($thumbs_meta) || (isset($meta['optimized_size']) && empty($meta['no_savings']))) {
-                $is_optimize_main_image = $optimize_main_image && !isset($meta['optimized_size']);
+            if (!empty($thumbs_meta) || ($meta && $meta->getOptimizedSize() !== null)) {
+                $is_optimize_main_image = $optimize_main_image && $meta->getOptimizedSize() === null;
                 $stats_summary = $this->generateStatsSummary($id);
             } else {
                 // Were there no savings, or was there an error?
@@ -94,7 +90,7 @@ class MediaPage extends Settings
             'is_image' => $is_image,
             'is_optimize_main_image' => $is_optimize_main_image,
             'is_optimize_this_image' => $is_optimize_this_image,
-            'type' => $type,
+            'optimization_quality' => $optimization_quality,
             'id' => $id,
             'filename' => $filename,
             'image_url' => $image_url,

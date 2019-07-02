@@ -3,20 +3,19 @@
 namespace Tinyga\Action;
 
 use Tinyga\ImageOptimizer\OptimizationRequest;
-use Tinyga\Settings;
+use Tinyga\Model\TinygaOptions;
 use Tinyga\Tinyga;
 use Tinyga\Utils;
 
-class AdminMenu extends Settings
+class AdminMenu extends BaseAction
 {
     const MENU_SLUG = 'wp-tinyga';
 
     /**
-     * Register action to event.
+     * @inheritDoc
      */
-    public function __construct()
+    protected function registerActions()
     {
-        parent::__construct();
         add_action('admin_menu', [&$this, 'addSettingsMenuAction']);
         add_filter('plugin_action_links', [&$this, 'addPluginActionLinks'], 10, 2);
     }
@@ -65,32 +64,21 @@ class AdminMenu extends Settings
     {
         $result = [];
         if (!empty($_POST)) {
-            $settings = $_POST[Settings::OPTION_TINYGA_OPTIONS];
+            $settings = $_POST[TinygaOptions::OPTION_NAME];
             $result = $this->validateSettings($settings);
-            $this->updateSettings($result['valid']);
+            $new_tinyga_options = new TinygaOptions($result['valid']);
+            $this->updateOptions($new_tinyga_options);
         }
 
-        $api_key = isset($this->settings[self::TINYGA_OPTIONS_API_KEY])
-            ? $this->settings[self::TINYGA_OPTIONS_API_KEY]
-            : '';
-        $auto_optimize = isset($this->settings[self::TINYGA_OPTIONS_AUTO_OPTIMIZE])
-            ? $this->settings[self::TINYGA_OPTIONS_AUTO_OPTIMIZE]
-            : 1;
-        $optimize_main_image = isset($this->settings[self::TINYGA_OPTIONS_OPTIMIZE_MAIN_IMAGE])
-            ? $this->settings[self::TINYGA_OPTIONS_OPTIMIZE_MAIN_IMAGE]
-            : 1;
-        $quality = isset($this->settings[self::TINYGA_OPTIONS_QUALITY])
-            ? $this->settings[self::TINYGA_OPTIONS_QUALITY]
-            : 1;
-        $quality_range = range(OptimizationRequest::MAX_QUALITY, OptimizationRequest::MIN_QUALITY);
+        $api_key = $this->tinyga_options->getApiKey();
+        $auto_optimize = $this->tinyga_options->isAutoOptimize();
+        $optimize_main_image = $this->tinyga_options->isOptimizeMainImage();
+        $quality = $this->tinyga_options->getQuality();
 
         $sizes = Utils::getImageSizes(true);
         $valid_sizes = [];
         foreach ($sizes as $size) {
-            $include_size = self::TINYGA_OPTIONS_SIZES_PREFIX . $size;
-            $valid_sizes[$include_size] = isset($this->settings[$include_size])
-                ? $this->settings[$include_size]
-                : 1;
+            $valid_sizes[$size] = $this->tinyga_options->isValidSize($size);
         }
 
         Utils::view('settings', [
@@ -99,7 +87,6 @@ class AdminMenu extends Settings
             'auto_optimize' => $auto_optimize,
             'optimize_main_image' => $optimize_main_image,
             'quality' => $quality,
-            'quality_range' => $quality_range,
             'sizes' => $sizes,
             'valid_sizes' => $valid_sizes,
         ]);
@@ -112,7 +99,7 @@ class AdminMenu extends Settings
      *
      * @return array
      */
-    private function validateSettings($input)
+    protected function validateSettings($input)
     {
         $valid = [];
         $error = [];
@@ -125,12 +112,11 @@ class AdminMenu extends Settings
         $valid['auto_optimize'] = isset($input['auto_optimize']) ? 1 : 0;
         $valid['optimize_main_image'] = isset($input['optimize_main_image']) ? 1 : 0;
         $valid['quality'] = isset($input['quality']) ? $input['quality'] : OptimizationRequest::DEFAULT_LOSSY_QUALITY;
-        $valid['sizes'] = isset($input['quality']) ? $input['quality'] : OptimizationRequest::DEFAULT_LOSSY_QUALITY;
 
         $sizes = Utils::getImageSizes(true);
         foreach ($sizes as $size) {
-            $include_size = self::TINYGA_OPTIONS_SIZES_PREFIX . $size;
-            $valid[$include_size] = isset($input[$include_size]) ? 1 : 0;
+            $include_size = 'tinyga_size_' . $size;
+            $valid['sizes'][$size] = isset($input[$include_size]) ? 1 : 0;
         }
 
         if (!empty($error)) {

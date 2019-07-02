@@ -3,7 +3,7 @@
     $main_image_tinyga_stats = $main_image_tinyga_stats ?: null;
     $thumbs_count = $thumbs_count ?: null;
     $thumbs_tinyga_stats = $thumbs_tinyga_stats ?: null;
-    $type = $type ?: null;
+    $optimization_quality = $optimization_quality ?: null;
     $show_reset = $show_reset ?: null;
 ?>
 <div class="tinyga_detailed_results_wrap">
@@ -30,9 +30,9 @@
     <?php } ?>
 
         <br />
-        <span><strong>Optimization mode:</strong></span>
+        <span><strong>Optimization quality:</strong></span>
         <br />
-        <span><?php echo ucfirst($type); ?></span>
+        <span><?php echo $optimization_quality; ?></span>
 
     <?php if (!empty($show_reset)) { ?>
         <br />

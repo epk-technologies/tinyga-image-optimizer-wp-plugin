@@ -1,14 +1,15 @@
 <?php
 
-namespace Tinyga;
+namespace Tinyga\Manager;
 
 use Tinyga\ImageOptimizer\Image\ImageFile;
 use Tinyga\ImageOptimizer\ImageOptimizerClient;
 use Tinyga\ImageOptimizer\OptimizationException;
 use Tinyga\ImageOptimizer\OptimizationRequest;
 use Tinyga\ImageOptimizer\OptimizationResult;
+use Tinyga\Model\TinygaOptions;
 
-final class ImageOptimizer extends Settings
+final class ImageOptimizationManager extends SettingsManager
 {
     const MENU_SLUG = 'wp-tinyga';
 
@@ -18,11 +19,21 @@ final class ImageOptimizer extends Settings
     private $client;
 
     /**
+     * @var TinygaOptions
+     */
+    private $tinyga_options;
+
+    /**
+     * @var OptimizationRequest
+     */
+    private $last_request;
+
+    /**
      * Register action to event.
      */
     public function __construct()
     {
-        parent::__construct();
+        $this->tinyga_options = $this->getOptions();
         $this->setClient();
     }
 
@@ -34,30 +45,39 @@ final class ImageOptimizer extends Settings
             $this->client->setApiEndpointUrl(TINYGA_API_ENDPOINT);
         }
 
-        if (isset($this->settings[self::TINYGA_OPTIONS_API_KEY])) {
-            $this->client->setApiKey($this->settings[self::TINYGA_OPTIONS_API_KEY]);
+        if ($this->tinyga_options->getApiKey()) {
+            $this->client->setApiKey($this->tinyga_options->getApiKey());
         }
     }
 
     /**
      * @param ImageFile $image
+     * @param int|null $quality
      *
      * @return OptimizationResult
      * @throws OptimizationException
      */
-    public function optimizeImage(ImageFile $image)
+    public function optimizeImage(ImageFile $image, $quality = null)
     {
-        $request = new OptimizationRequest($image);
+        $this->last_request = $request = new OptimizationRequest($image);
 
         if (defined('TINYGA_TEST_MODE')) {
             $request->setTest(TINYGA_TEST_MODE);
         }
 
-        if (isset($this->settings[self::TINYGA_OPTIONS_QUALITY])) {
-            $request->setQuality($this->settings[self::TINYGA_OPTIONS_QUALITY]);
+        if ($quality || $this->tinyga_options->getQuality()) {
+            $request->setQuality($quality ?: $this->tinyga_options->getQuality());
         }
 
         set_time_limit(400);
         return $this->client->optimizeImage($request);
+    }
+
+    /**
+     * @return int
+     */
+    public function getLastRequestQuality()
+    {
+        return $this->last_request->getQuality();
     }
 }

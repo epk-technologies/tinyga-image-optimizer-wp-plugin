@@ -2,9 +2,11 @@
 
 namespace Tinyga\Action;
 
+use Tinyga\Model\TinygaImageMeta;
+use Tinyga\Model\TinygaThumbMeta;
 use Tinyga\Utils;
 
-trait StatsSummaryTrait
+abstract class StatsSummary extends BaseAction
 {
     /**
      * @param $id
@@ -19,18 +21,18 @@ trait StatsSummaryTrait
         $total_original_size = 0;
         $total_saved_bytes = 0;
 
-        if (isset($image_meta['original_size'])) {
-            $total_original_size += (int)$image_meta['original_size'];
+        if ($image_meta && $image_meta->getOriginalSize()) {
+            $total_original_size += $image_meta->getOriginalSize();
         }
 
-        if (isset($image_meta['saved_bytes'])) {
-            $total_saved_bytes += (int)$image_meta['saved_bytes'];
+        if ($image_meta && $image_meta->getSavedBytes()) {
+            $total_saved_bytes += $image_meta->getSavedBytes();
         }
 
         if (!empty($thumbs_meta)) {
-            foreach ($thumbs_meta as $k => $v) {
-                $total_original_size += (int)$v['original_size'];
-                $total_saved_bytes += (int)$v['original_size'] - (int)$v['optimized_size'];
+            foreach ($thumbs_meta as $thumb_meta) {
+                $total_original_size += $thumb_meta->getOriginalSize();
+                $total_saved_bytes += $thumb_meta->getOriginalSize() - $thumb_meta->getOptimizedSize();
             }
 
         }
@@ -59,51 +61,52 @@ trait StatsSummaryTrait
      *
      * @return false|string
      */
-    private function resultsHtml($id)
+    protected function resultsHtml($id)
     {
         // get meta data for main post and thumbs
         $image_meta = $this->getImageMeta($id);
         $thumbs_meta = $this->getThumbsMeta($id);
 
-        $main_image_optimized = !empty($image_meta) && isset($image_meta['type']);
-        $thumbs_optimized = !empty($thumbs_meta) && count($thumbs_meta) && isset($thumbs_meta[0]['type']);
+        $main_image_optimized = $image_meta && $image_meta->getOptimizationQuality();
+        $thumbs_optimized = !empty($thumbs_meta) && count($thumbs_meta) && $thumbs_meta[0]->getOptimizationQuality();
 
-        $type = '';
+        $optimization_quality = 'N/A';
         $main_image_tinyga_stats = [];
         $thumbs_tinyga_stats = [];
         $thumbs_count = 0;
 
         if ($main_image_optimized) {
-            $type = $image_meta['type'];
-            $main_image_tinyga_stats = $this->calculateSavings($image_meta);
+            $optimization_quality = $image_meta->getOptimizationQuality();
+            $main_image_tinyga_stats = $this->calculateImageMetaSavings($image_meta);
         }
 
         if ($thumbs_optimized) {
-            $type = $thumbs_meta[0]['type'];
-            $thumbs_tinyga_stats = $this->calculateSavings($thumbs_meta);
+            $optimization_quality = $thumbs_meta[0]->getOptimizationQuality();
+            $thumbs_tinyga_stats = $this->calculateThumbsMetaSavings($thumbs_meta);
             $thumbs_count = count($thumbs_meta);
         }
+
+        $show_reset = $this->tinyga_options->isShowReset();
 
         return Utils::view('results', [
             'main_image_tinyga_stats' => $main_image_tinyga_stats,
             'thumbs_count' => $thumbs_count,
             'thumbs_tinyga_stats' => $thumbs_tinyga_stats,
-            'type' => $type,
-            'show_reset' => $this->settings['show_reset'],
+            'optimization_quality' => $optimization_quality,
+            'show_reset' => $show_reset,
         ], true);
     }
 
     /**
-     * @param $meta
+     * @param TinygaImageMeta $meta
      *
      * @return array
      */
-    private function calculateSavings($meta)
+    protected function calculateImageMetaSavings($meta)
     {
-        if (isset($meta['original_size'])) {
-            $savings_percentage = $meta['savings_percent'];
-            $saved_bytes = isset($meta['saved_bytes']) ? $meta['saved_bytes'] : 0;
-            $saved_bytes = Utils::formatBytes($saved_bytes);
+        if ($meta->getOriginalSize() !== null) {
+            $savings_percentage = $meta->getSavingsPercent();
+            $saved_bytes = Utils::formatBytes($meta->getSavedBytes());
 
             return [
                 'savings_percentage' => $savings_percentage,
@@ -111,13 +114,23 @@ trait StatsSummaryTrait
             ];
         }
 
-        if (!empty($meta)) {
+        return [];
+    }
+
+    /**
+     * @param TinygaThumbMeta[] $thumbs_meta
+     *
+     * @return array
+     */
+    protected function calculateThumbsMetaSavings($thumbs_meta)
+    {
+        if (!empty($thumbs_meta)) {
             $total_thumb_byte_savings = 0;
             $total_thumb_size = 0;
 
-            foreach ($meta as $k => $v) {
-                $total_thumb_size += $v['original_size'];
-                $thumb_byte_savings = $v['original_size'] - $v['optimized_size'];
+            foreach ($thumbs_meta as $meta) {
+                $total_thumb_size += $meta->getOriginalSize();
+                $thumb_byte_savings = $meta->getOriginalSize() - $meta->getOptimizedSize();
                 $total_thumb_byte_savings += $thumb_byte_savings;
             }
 

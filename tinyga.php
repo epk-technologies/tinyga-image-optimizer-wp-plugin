@@ -5,7 +5,7 @@
  * Plugin URI:      http://wordpress.org/plugins/tinyga-image-optimizer/
  * Description:     This plugin allows you to optimize your WordPress images through the Tinyga API.
  * Author:          EPK Technologies s.r.o.
- * Author URI:      https://tinyga.io
+ * Author URI:      https://tinyga.cz
  * License:         GPL2
  * License URI:     https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain:     tinyga
@@ -18,7 +18,7 @@
 use Tinyga\Tinyga;
 
 define('TINYGA_DEV_MODE', true);
-define('TINYGA_TEST_MODE', true);
+define('TINYGA_TEST_MODE', false);
 define('TINYGA_API_ENDPOINT', 'http://127.0.0.1:8000/api/v1/');
 
 if (!defined('TINYGA_PLUGIN_FILE')) {
