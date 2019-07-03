@@ -57,15 +57,15 @@ abstract class StatsSummary extends BaseAction
     }
 
     /**
-     * @param $id
+     * @param int $image_id
      *
      * @return false|string
      */
-    protected function resultsHtml($id)
+    protected function resultsHtml($image_id)
     {
         // get meta data for main post and thumbs
-        $image_meta = $this->getImageMeta($id);
-        $thumbs_meta = $this->getThumbsMeta($id);
+        $image_meta = $this->getImageMeta($image_id);
+        $thumbs_meta = $this->getThumbsMeta($image_id);
 
         $main_image_optimized = $image_meta && $image_meta->getOptimizationQuality();
         $thumbs_optimized = !empty($thumbs_meta) && count($thumbs_meta) && $thumbs_meta[0]->getOptimizationQuality();
@@ -89,6 +89,7 @@ abstract class StatsSummary extends BaseAction
         $show_reset = $this->tinyga_options->isShowReset();
 
         return Utils::view('results', [
+            'image_id' => $image_id,
             'main_image_tinyga_stats' => $main_image_tinyga_stats,
             'thumbs_count' => $thumbs_count,
             'thumbs_tinyga_stats' => $thumbs_tinyga_stats,

@@ -11,7 +11,7 @@ use Tinyga\Model\TinygaImageMeta;
 use Tinyga\Model\TinygaThumbMeta;
 use Tinyga\Utils;
 
-class MediaPageUploader extends StatsSummary
+class MediaUploader extends StatsSummary
 {
     protected $image_optimizer;
 
@@ -277,7 +277,7 @@ class MediaPageUploader extends StatsSummary
                     $thumb_image = new ImageFile($thumb_path);
 
                     try {
-                        $optimization_result = $this->image_optimizer->optimizeImage($thumb_image, $quality);
+                        $optimization_result = $this->image_optimizer->optimizeImage($thumb_image, $quality, false);
                     } catch (OptimizationException $e) {
                         continue;
                     }

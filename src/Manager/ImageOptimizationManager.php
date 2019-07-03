@@ -6,6 +6,7 @@ use Tinyga\ImageOptimizer\Image\ImageFile;
 use Tinyga\ImageOptimizer\ImageOptimizerClient;
 use Tinyga\ImageOptimizer\OptimizationException;
 use Tinyga\ImageOptimizer\OptimizationRequest;
+use Tinyga\ImageOptimizer\OptimizationRequest\Operations\OperationResize;
 use Tinyga\ImageOptimizer\OptimizationResult;
 use Tinyga\Model\TinygaOptions;
 
@@ -53,11 +54,12 @@ final class ImageOptimizationManager extends SettingsManager
     /**
      * @param ImageFile $image
      * @param int|null $quality
+     * @param bool $is_main_image
      *
      * @return OptimizationResult
      * @throws OptimizationException
      */
-    public function optimizeImage(ImageFile $image, $quality = null)
+    public function optimizeImage(ImageFile $image, $quality = null, $is_main_image = true)
     {
         $this->last_request = $request = new OptimizationRequest($image);
 
@@ -67,6 +69,14 @@ final class ImageOptimizationManager extends SettingsManager
 
         if ($quality || $this->tinyga_options->getQuality()) {
             $request->setQuality($quality ?: $this->tinyga_options->getQuality());
+        }
+
+        if ($is_main_image && $this->tinyga_options->isResize()) {
+            $operation = new OperationResize(
+                $this->tinyga_options->getMaxWidth() ?: null,
+                $this->tinyga_options->getMaxHeight() ?: null
+            );
+            $request->addOperation($operation);
         }
 
         set_time_limit(400);

@@ -8,6 +8,10 @@ class TinygaOptions extends BaseModel
 {
     const OPTION_NAME = '_tinyga_options';
 
+    const BULK_ASYNC_LIMIT_MIN = 1;
+    const BULK_ASYNC_LIMIT_MAX = 10;
+    const BULK_ASYNC_LIMIT_DEFAULT = 4;
+
     /**
      * @var string
      */
@@ -29,6 +33,16 @@ class TinygaOptions extends BaseModel
     protected $quality = OptimizationRequest::DEFAULT_LOSSY_QUALITY;
 
     /**
+     * @var int
+     */
+    protected $max_width = 0;
+
+    /**
+     * @var int
+     */
+    protected $max_height = 0;
+
+    /**
      * @var array
      */
     protected $sizes;
@@ -37,6 +51,11 @@ class TinygaOptions extends BaseModel
      * @var bool
      */
     protected $show_reset = 0;
+
+    /**
+     * @var int
+     */
+    protected $bulk_async_limit = self::BULK_ASYNC_LIMIT_DEFAULT;
 
     /**
      * @return string
@@ -103,6 +122,46 @@ class TinygaOptions extends BaseModel
     }
 
     /**
+     * @return int
+     */
+    public function getMaxWidth()
+    {
+        return $this->max_width;
+    }
+
+    /**
+     * @param int $max_width
+     */
+    public function setMaxWidth($max_width)
+    {
+        $this->max_width = $max_width;
+    }
+
+    /**
+     * @return int
+     */
+    public function getMaxHeight()
+    {
+        return $this->max_height;
+    }
+
+    /**
+     * @param int $max_height
+     */
+    public function setMaxHeight($max_height)
+    {
+        $this->max_height = $max_height;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isResize()
+    {
+        return $this->max_height || $this->max_width;
+    }
+
+    /**
      * @return array
      */
     public function getSizes()
@@ -142,5 +201,21 @@ class TinygaOptions extends BaseModel
     public function setShowReset($show_reset)
     {
         $this->show_reset = $show_reset;
+    }
+
+    /**
+     * @return int
+     */
+    public function getBulkAsyncLimit()
+    {
+        return $this->bulk_async_limit;
+    }
+
+    /**
+     * @param int $bulk_async_limit
+     */
+    public function setBulkAsyncLimit($bulk_async_limit)
+    {
+        $this->bulk_async_limit = $bulk_async_limit;
     }
 }

@@ -74,6 +74,10 @@ class AdminMenu extends BaseAction
         $auto_optimize = $this->tinyga_options->isAutoOptimize();
         $optimize_main_image = $this->tinyga_options->isOptimizeMainImage();
         $quality = $this->tinyga_options->getQuality();
+        $max_width = $this->tinyga_options->getMaxWidth();
+        $max_height = $this->tinyga_options->getMaxHeight();
+        $show_reset = $this->tinyga_options->isShowReset();
+        $bulk_async_limit = $this->tinyga_options->getBulkAsyncLimit();
 
         $sizes = Utils::getImageSizes(true);
         $valid_sizes = [];
@@ -87,8 +91,12 @@ class AdminMenu extends BaseAction
             'auto_optimize' => $auto_optimize,
             'optimize_main_image' => $optimize_main_image,
             'quality' => $quality,
+            'max_width' => $max_width,
+            'max_height' => $max_height,
+            'show_reset' => $show_reset,
             'sizes' => $sizes,
             'valid_sizes' => $valid_sizes,
+            'bulk_async_limit' => $bulk_async_limit,
         ]);
     }
 
@@ -111,7 +119,11 @@ class AdminMenu extends BaseAction
         $valid['api_key'] = $input['api_key'];
         $valid['auto_optimize'] = isset($input['auto_optimize']) ? 1 : 0;
         $valid['optimize_main_image'] = isset($input['optimize_main_image']) ? 1 : 0;
-        $valid['quality'] = isset($input['quality']) ? $input['quality'] : OptimizationRequest::DEFAULT_LOSSY_QUALITY;
+        $valid['quality'] = isset($input['quality']) ? (int) $input['quality'] : OptimizationRequest::DEFAULT_LOSSY_QUALITY;
+        $valid['max_width'] = isset($input['max_width']) ? (int) $input['max_width'] : 0;
+        $valid['max_height'] = isset($input['max_height']) ? (int) $input['max_height'] : 0;
+        $valid['show_reset'] = isset($input['show_reset']) ? 1 : 0;
+        $valid['bulk_async_limit'] = isset($input['bulk_async_limit']) ? (int) $input['bulk_async_limit'] : null;
 
         $sizes = Utils::getImageSizes(true);
         foreach ($sizes as $size) {

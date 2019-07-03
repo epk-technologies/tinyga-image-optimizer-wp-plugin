@@ -50,6 +50,9 @@ class EnqueueScripts extends BaseAction
         }
     }
 
+    /**
+     * @return false|string|void
+     */
     protected function renderModalView()
     {
         return Utils::view('modals/bulk_modal', [
@@ -58,6 +61,9 @@ class EnqueueScripts extends BaseAction
         ], true);
     }
 
+    /**
+     * @return false|string|void
+     */
     protected function renderModalRowView()
     {
         return Utils::view('modals/bulk_modal_row', [], true);

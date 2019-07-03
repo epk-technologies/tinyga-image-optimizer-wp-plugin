@@ -15,8 +15,14 @@ $quality_min = OptimizationRequest::MIN_QUALITY;
 $quality_range = range(OptimizationRequest::MAX_QUALITY, OptimizationRequest::MIN_QUALITY);
 $quality_lossless = OptimizationRequest::LOSSLESS_QUALITY;
 $quality_default = OptimizationRequest::DEFAULT_LOSSY_QUALITY;
+$max_width = $max_width ?: 0;
+$max_height = $max_height ?: 0;
+$show_reset = $show_reset ?: false;
 $sizes = $sizes ?: null;
 $valid_sizes = $valid_sizes ?: null;
+$bulk_async_limit = $bulk_async_limit ?: TinygaOptions::BULK_ASYNC_LIMIT_DEFAULT;
+$bulk_async_limit_min = TinygaOptions::BULK_ASYNC_LIMIT_MIN;
+$bulk_async_limit_max = TinygaOptions::BULK_ASYNC_LIMIT_MAX;
 
 
 $option_name = static function($value) {
@@ -56,6 +62,26 @@ $option_name = static function($value) {
                            type="text"
                            value="<?php echo esc_attr($api_key); ?>"
                            size="50">
+                </td>
+            </tr>
+            <tr class="with-tip">
+                <th scope="row">
+                    <label for="quality">Quality setting:</label>
+                </th>
+                <td>
+                    <?php Utils::view('parts/select_quality', [
+                        'name' => $option_name('quality'),
+                        'selected_quality' => $quality,
+                    ]); ?>
+                </td>
+            </tr>
+            <tr class="tip">
+                <td colspan="2">
+                    <div>
+                        Advanced users can force the quality to a value between <?php echo $quality_min ?> and <?php echo $quality_max ?> with <?php echo $quality_lossless ?> being lossless <br />
+                        For example, forcing the quality to 60 or 70 might yield greater savings, but the resulting quality might be affected, depending on the image. <br />
+                        We therefore recommend keeping the default <strong><?php echo $quality_default ?></strong> setting, which will not allow a resulting image of unacceptable quality.<br />
+                    </div>
                 </td>
             </tr>
             <tr class="with-tip">
@@ -100,22 +126,28 @@ $option_name = static function($value) {
                 </td>
             </tr>
             <tr class="with-tip">
-                <th scope="row">
-                    <label for="quality">Quality setting:</label>
-                </th>
+                <th scope="row">Resize main image:</th>
                 <td>
-                    <?php Utils::view('parts/select_quality', [
-                        'name' => $option_name('quality'),
-                        'selected_quality' => $quality,
-                    ]); ?>
+                    <label for="tinyga_max_width">Max Width (px):</label>&nbsp;&nbsp;
+                    <input type="text"
+                           id="tinyga_max_width"
+                           name="<?php echo $option_name('max_width') ?>"
+                           value="<?php echo esc_attr($max_width); ?>"
+                           style="width:50px;" />&nbsp;&nbsp;&nbsp;
+                    <label for="tinyga_max_height">Max Height (px):</label>&nbsp;&nbsp;
+                    <input type="text"
+                           id="tinyga_max_height"
+                           name="<?php echo $option_name('max_height') ?>"
+                           value="<?php echo esc_attr($max_height); ?>"
+                           style="width:50px;" />
                 </td>
             </tr>
             <tr class="tip">
                 <td colspan="2">
                     <div>
-                        Advanced users can force the quality to a value between <?php echo $quality_min ?> and <?php echo $quality_max ?> with <?php echo $quality_lossless ?> being lossless <br />
-                        For example, forcing the quality to 60 or 70 might yield greater savings, but the resulting quality might be affected, depending on the image. <br />
-                        We therefore recommend keeping the default <strong><?php echo $quality_default ?></strong> setting, which will not allow a resulting image of unacceptable quality.<br />
+                        You can restrict the maximum dimensions of image uploads by width and/or height.<br />
+                        It is especially useful if you wish to prevent unnecessarily large photos with extremely high resolutions from being uploaded, for example, <br />
+                        photos shot with a recent-model iPhone. Note: you can restrict the dimensions by width, height, or both. A value of zero disables.
                     </div>
                 </td>
             </tr>
@@ -140,7 +172,8 @@ $option_name = static function($value) {
                             <input type="checkbox"
                                    id="<?php echo $name ?>"
                                    name="<?php echo $option_name($name) ?>"
-                                   value="1" <?php checked(1, $size_checked, true); ?>/>
+                                   value="1"
+                                   <?php checked(1, $size_checked, true); ?>/>
                             &nbsp;<?php echo $size ?>
                         </label>&nbsp;&nbsp;&nbsp;&nbsp;
                         <?php $i++ ?>
@@ -148,6 +181,51 @@ $option_name = static function($value) {
                             <br />
                         <?php } ?>
                     <?php } ?>
+                </td>
+            </tr>
+            <tr class="tinyga-advanced-settings with-tip">
+                <th scope="row">
+                    <label for="tinyga_show_reset">Show metadata reset per image:</label>
+                </th>
+                <td>
+                    <input type="checkbox"
+                           id="tinyga_show_reset"
+                           name="<?php echo $option_name('show_reset') ?>"
+                           value="1"
+                           <?php checked(1, $show_reset, true); ?>/>
+                    &nbsp;&nbsp;&nbsp;&nbsp;<span class="tinyga-reset-all enabled">Reset All Images</span>
+                </td>
+            </tr>
+            <tr class="tip">
+                <td colspan="2">
+                    <div>
+                        Checking this option will add a Reset button in the "Show Details" popup in the Tinyga Stats column for each optimized image.<br />
+                        Resetting an image will remove the Tinyga metadata associated with it, effectively making your blog forget that it had been optimized in the first place, allowing further optimization in some cases.<br />
+                        If an image has been optimized using the lossless setting, lossless optimization will not yield any greater savings. If in doubt, please contact support@tinyga.cz
+                    </div>
+                </td>
+            </tr>
+            <tr class="tinyga-advanced-settings with-tip">
+                <th scope="row">
+                    <label for="tinyga_bulk_async_limit">Bulk Concurrency:</label>
+                </th>
+                <td>
+                    <select id="tinyga_bulk_async_limit"
+                            name="<?php echo $option_name('bulk_async_limit') ?>">
+                        <?php foreach (range($bulk_async_limit_min, $bulk_async_limit_max) as $number) { ?>
+                            <option value="<?php echo $number ?>" <?php selected($bulk_async_limit, $number, true); ?>>
+                                <?php echo $number ?>
+                            </option>
+                        <?php } ?>
+                    </select>
+                </td>
+            </tr>
+            <tr class="tip">
+                <td colspan="2">
+                    <div>
+                        This settings defines how many images can be processed at the same time using the bulk optimizer. The recommended (and default) value is 4. <br />
+                        For blogs on very small hosting plans, or with reduced connectivity, a lower number might be necessary to avoid hitting request limits.
+                    </div>
                 </td>
             </tr>
         </tbody>

@@ -26,7 +26,7 @@ abstract class BaseModel
     public function toArray() {
         /** @noinspection PhpUnhandledExceptionInspection */
         $reflectionClass = new ReflectionClass($this);
-        $array = array();
+        $array = [];
         foreach ($reflectionClass->getProperties() as $property) {
             $property->setAccessible(true);
             $array[$property->getName()] = $property->getValue($this);

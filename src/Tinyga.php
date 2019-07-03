@@ -5,7 +5,8 @@ namespace Tinyga;
 use Tinyga\Action\AdminMenu;
 use Tinyga\Action\EnqueueScripts;
 use Tinyga\Action\MediaPage;
-use Tinyga\Action\MediaPageUploader;
+use Tinyga\Action\MediaUploader;
+use Tinyga\Action\MediaReset;
 
 class Tinyga
 {
@@ -21,7 +22,8 @@ class Tinyga
         $actions = [
             AdminMenu::class,
             MediaPage::class,
-            MediaPageUploader::class,
+            MediaUploader::class,
+            MediaReset::class,
             EnqueueScripts::class,
         ];
 

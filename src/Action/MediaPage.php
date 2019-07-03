@@ -46,6 +46,10 @@ class MediaPage extends StatsSummary
         return $columns;
     }
 
+    /**
+     * @param $id
+     * @param $original_size
+     */
     protected function fillOriginalSizeColumn($id, $original_size)
     {
         $original_size = Utils::formatBytes($original_size);
@@ -60,6 +64,9 @@ class MediaPage extends StatsSummary
         echo $original_size;
     }
 
+    /**
+     * @param $id
+     */
     protected function fillOptimizedSizeColumn($id)
     {
         $is_image = wp_attachment_is_image($id);
@@ -78,7 +85,7 @@ class MediaPage extends StatsSummary
 
             // Is it optimized? Show some stats
             if (!empty($thumbs_meta) || ($meta && $meta->getOptimizedSize() !== null)) {
-                $is_optimize_main_image = $optimize_main_image && $meta->getOptimizedSize() === null;
+                $is_optimize_main_image = $optimize_main_image && $meta&& $meta->getOptimizedSize() === null;
                 $stats_summary = $this->generateStatsSummary($id);
             } else {
                 // Were there no savings, or was there an error?

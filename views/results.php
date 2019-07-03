@@ -1,5 +1,6 @@
 <?php
     // variables
+    $image_id = $image_id ?: null;
     $main_image_tinyga_stats = $main_image_tinyga_stats ?: null;
     $thumbs_count = $thumbs_count ?: null;
     $thumbs_tinyga_stats = $thumbs_tinyga_stats ?: null;
@@ -36,10 +37,12 @@
 
     <?php if (!empty($show_reset)) { ?>
         <br />
-        <small class="tinygaReset" data-id="<?php echo $id; ?>"
+        <small class="tinygaReset"
+               data-id="<?php echo $image_id; ?>"
                title="Removes Tinyga metadata associated with this image">
             Reset
         </small>
+        <br />
         <span class="tinygaSpinner"></span>
     <?php } ?>
 </div>
