@@ -61,7 +61,7 @@ class TinygaImageMeta extends BaseModel
     protected $height;
 
     /**
-     * @var string
+     * @var array
      */
     protected $meta;
 
@@ -214,7 +214,7 @@ class TinygaImageMeta extends BaseModel
     }
 
     /**
-     * @return string|null
+     * @return array|null
      */
     public function getMeta()
     {
@@ -222,7 +222,7 @@ class TinygaImageMeta extends BaseModel
     }
 
     /**
-     * @param string|null $meta
+     * @param array|null $meta
      */
     public function setMeta($meta)
     {

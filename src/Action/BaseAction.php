@@ -2,20 +2,13 @@
 
 namespace Tinyga\Action;
 
-use Tinyga\Model\TinygaImageMeta;
 use Tinyga\Model\TinygaOptions;
-use Tinyga\Model\TinygaThumbMeta;
-use Tinyga\Manager\SettingsManager;
+use Tinyga\Manager\WPManager;
 
-abstract class BaseAction
+abstract class BaseAction extends WPManager
 {
     /**
-     * @var SettingsManager
-     */
-    protected $settings_manager;
-
-    /**
-     * @var SettingsManager
+     * @var TinygaOptions
      */
     protected $tinyga_options;
 
@@ -24,8 +17,7 @@ abstract class BaseAction
      */
     public function __construct()
     {
-        $this->settings_manager = new SettingsManager();
-        $this->tinyga_options = $this->settings_manager->getOptions();
+        $this->tinyga_options = $this->getTinygaOptions();
         $this->registerActions();
     }
 
@@ -39,57 +31,14 @@ abstract class BaseAction
      *
      * @return bool
      */
-    protected function updateOptions($options)
+    public function updateTinygaOptions($options)
     {
-        $result = $this->settings_manager->updateOptions($options);
+        $result = parent::updateTinygaOptions($options);
 
         if ($result) {
-            $this->tinyga_options = $this->settings_manager->getOptions();
+            $this->tinyga_options = $this->getTinygaOptions();
         }
 
         return $result;
-    }
-
-    /**
-     * @param int $id
-     *
-     * @return TinygaImageMeta|null
-     */
-    protected function getImageMeta($id)
-    {
-        return $this->settings_manager->getImageMeta($id);
-    }
-
-    /**
-     * @param int $id
-     * @param array|TinygaImageMeta $data
-     *
-     * @return mixed
-     */
-    protected function updateImageMeta($id, $data)
-    {
-        return $this->settings_manager->updateImageMeta($id, $data);
-    }
-
-    /**
-     * @param int $id
-     * @param bool $array
-     *
-     * @return TinygaThumbMeta[]|array
-     */
-    protected function getThumbsMeta($id, $array = false)
-    {
-        return $this->settings_manager->getThumbsMeta($id, $array);
-    }
-
-    /**
-     * @param int $id
-     * @param array|TinygaThumbMeta $data
-     *
-     * @return mixed
-     */
-    protected function updateThumbsMeta($id, $data)
-    {
-        return $this->settings_manager->updateThumbsMeta($id, $data);
     }
 }

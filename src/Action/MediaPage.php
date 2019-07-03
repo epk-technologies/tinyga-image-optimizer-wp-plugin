@@ -11,8 +11,8 @@ class MediaPage extends StatsSummary
      */
     protected function registerActions()
     {
-        add_action('manage_media_custom_column', [&$this, 'fillMediaColumns'], 10, 2);
-        add_filter('manage_media_columns', [&$this, 'addMediaColumns']);
+        $this->addAction('manage_media_custom_column', [&$this, 'fillMediaColumns'], 10, 2);
+        $this->addFilter('manage_media_columns', [&$this, 'addMediaColumns']);
     }
 
     /**
@@ -21,7 +21,7 @@ class MediaPage extends StatsSummary
      */
     public function fillMediaColumns($column_name, $id)
     {
-        $file = Utils::getAttachedFile($id);
+        $file = $this->getAttachedFile($id);
         $original_size = filesize($file);
 
         // handle the case where file does not exist
@@ -54,7 +54,7 @@ class MediaPage extends StatsSummary
     {
         $original_size = Utils::formatBytes($original_size);
 
-        if (wp_attachment_is_image($id)) {
+        if ($this->attachmentIsImage($id)) {
             $meta = $this->getImageMeta($id);
             if ($meta && $meta->getOriginalSize()) {
                 $original_size = Utils::formatBytes($meta->getOriginalSize());
@@ -69,8 +69,8 @@ class MediaPage extends StatsSummary
      */
     protected function fillOptimizedSizeColumn($id)
     {
-        $is_image = wp_attachment_is_image($id);
-        $image_url = wp_get_attachment_url($id);
+        $is_image = $this->attachmentIsImage($id);
+        $image_url = $this->getAttachmentUrl($id);
         $filename = basename($image_url);
         $is_optimize_main_image = false;
         $is_optimize_this_image = false;

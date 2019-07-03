@@ -4,7 +4,6 @@ namespace Tinyga\Action;
 
 use Tinyga\ImageOptimizer\OptimizationRequest;
 use Tinyga\Model\TinygaOptions;
-use Tinyga\Tinyga;
 use Tinyga\Utils;
 
 class AdminMenu extends BaseAction
@@ -16,8 +15,8 @@ class AdminMenu extends BaseAction
      */
     protected function registerActions()
     {
-        add_action('admin_menu', [&$this, 'addSettingsMenuAction']);
-        add_filter('plugin_action_links', [&$this, 'addPluginActionLinks'], 10, 2);
+        $this->addAction('admin_menu', [&$this, 'addSettingsMenuAction']);
+        $this->addFilter('plugin_action_links', [&$this, 'addPluginActionLinks'], 10, 2);
     }
 
     /**
@@ -25,8 +24,8 @@ class AdminMenu extends BaseAction
      */
     public function addSettingsMenuAction()
     {
-        add_options_page(
-            translate('Tinyga Image Optimizer Settings', Tinyga::SLUG),
+        $this->addOptionsPage(
+            $this->trans('Tinyga Image Optimizer Settings'),
             'Tinyga',
             'manage_options',
             self::MENU_SLUG,
@@ -44,13 +43,13 @@ class AdminMenu extends BaseAction
      */
     public function addPluginActionLinks($links, $file)
     {
-        if (plugin_basename(TINYGA_PLUGIN_FILE) !== $file) {
+        if ($this->pluginBasename(TINYGA_PLUGIN_FILE) !== $file) {
             return $links;
         }
 
         $menu_slug = self::MENU_SLUG;
-        $settings_url = admin_url("options-general.php?page={$menu_slug}");
-        $settings_url_name = translate('Settings', Tinyga::SLUG);
+        $settings_url = $this->adminUrl("options-general.php?page={$menu_slug}");
+        $settings_url_name = $this->trans('Settings');
 
         return array_merge($links, [
             'settings' => "<a href='{$settings_url}'>{$settings_url_name}</a>",
@@ -67,7 +66,7 @@ class AdminMenu extends BaseAction
             $settings = $_POST[TinygaOptions::OPTION_NAME];
             $result = $this->validateSettings($settings);
             $new_tinyga_options = new TinygaOptions($result['valid']);
-            $this->updateOptions($new_tinyga_options);
+            $this->updateTinygaOptions($new_tinyga_options);
         }
 
         $api_key = $this->tinyga_options->getApiKey();
@@ -79,7 +78,7 @@ class AdminMenu extends BaseAction
         $show_reset = $this->tinyga_options->isShowReset();
         $bulk_async_limit = $this->tinyga_options->getBulkAsyncLimit();
 
-        $sizes = Utils::getImageSizes(true);
+        $sizes = $this->getImageSizes(true);
         $valid_sizes = [];
         foreach ($sizes as $size) {
             $valid_sizes[$size] = $this->tinyga_options->isValidSize($size);
@@ -116,7 +115,7 @@ class AdminMenu extends BaseAction
             $error[] = 'API Credentials must not be left blank.';
         }
 
-        $valid['api_key'] = $input['api_key'];
+        $valid['api_key'] = $this->sanitizeTextField($input['api_key']);
         $valid['auto_optimize'] = isset($input['auto_optimize']) ? 1 : 0;
         $valid['optimize_main_image'] = isset($input['optimize_main_image']) ? 1 : 0;
         $valid['quality'] = isset($input['quality']) ? (int) $input['quality'] : OptimizationRequest::DEFAULT_LOSSY_QUALITY;
@@ -125,7 +124,7 @@ class AdminMenu extends BaseAction
         $valid['show_reset'] = isset($input['show_reset']) ? 1 : 0;
         $valid['bulk_async_limit'] = isset($input['bulk_async_limit']) ? (int) $input['bulk_async_limit'] : null;
 
-        $sizes = Utils::getImageSizes(true);
+        $sizes = $this->getImageSizes(true);
         foreach ($sizes as $size) {
             $include_size = 'tinyga_size_' . $size;
             $valid['sizes'][$size] = isset($input[$include_size]) ? 1 : 0;

@@ -10,7 +10,7 @@ use Tinyga\ImageOptimizer\OptimizationRequest\Operations\OperationResize;
 use Tinyga\ImageOptimizer\OptimizationResult;
 use Tinyga\Model\TinygaOptions;
 
-final class ImageOptimizationManager extends SettingsManager
+final class ImageOptimizationManager extends WPManager
 {
     const MENU_SLUG = 'wp-tinyga';
 
@@ -34,7 +34,7 @@ final class ImageOptimizationManager extends SettingsManager
      */
     public function __construct()
     {
-        $this->tinyga_options = $this->getOptions();
+        $this->tinyga_options = $this->getTinygaOptions();
         $this->setClient();
     }
 

@@ -13,8 +13,8 @@ class MediaReset extends BaseAction
      */
     protected function registerActions()
     {
-        add_action('wp_ajax_tinyga_reset', [&$this, 'tinygaMediaLibraryReset']);
-        add_action('wp_ajax_tinyga_reset_all', [&$this, 'tinygaMediaLibraryResetAll']);
+        $this->addAction('wp_ajax_tinyga_reset', [&$this, 'tinygaMediaLibraryReset']);
+        $this->addAction('wp_ajax_tinyga_reset_all', [&$this, 'tinygaMediaLibraryResetAll']);
     }
 
     /**
@@ -22,11 +22,11 @@ class MediaReset extends BaseAction
      */
     public function tinygaMediaLibraryResetAll()
     {
-        delete_post_meta_by_key(TinygaThumbMeta::OPTION_NAME);
-        delete_post_meta_by_key(TinygaImageMeta::OPTION_NAME);
+        $this->deletePostMetaByKey(TinygaThumbMeta::OPTION_NAME);
+        $this->deletePostMetaByKey(TinygaImageMeta::OPTION_NAME);
 
         echo json_encode(['success' => true]);
-        wp_die();
+        $this->WPDie();
     }
 
     /**
@@ -37,11 +37,11 @@ class MediaReset extends BaseAction
         $image_id = (int) $_POST['id'];
         $original_size = Utils::formatBytes(filesize(get_attached_file($image_id)));
 
-        delete_post_meta($image_id, TinygaThumbMeta::OPTION_NAME);
-        delete_post_meta($image_id, TinygaImageMeta::OPTION_NAME);
+        $this->deletePostMeta($image_id, TinygaThumbMeta::OPTION_NAME);
+        $this->deletePostMeta($image_id, TinygaImageMeta::OPTION_NAME);
 
         $optimization_quality = $this->tinyga_options->getQuality();
-        $image_url = wp_get_attachment_url($image_id);
+        $image_url = $this->getAttachmentUrl($image_id);
         $filename = basename($image_url);
 
         echo json_encode([
@@ -55,7 +55,7 @@ class MediaReset extends BaseAction
                 'image_url' => $image_url,
             ], true),
         ]);
-        wp_die();
+        $this->WPDie();
     }
 }
 

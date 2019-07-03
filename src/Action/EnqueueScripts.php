@@ -12,7 +12,7 @@ class EnqueueScripts extends BaseAction
      */
     protected function registerActions()
     {
-        add_action('admin_enqueue_scripts', [&$this, 'enqueueScripts']);
+        $this->addAction('admin_enqueue_scripts', [&$this, 'enqueueScripts']);
     }
 
     /**
@@ -25,25 +25,25 @@ class EnqueueScripts extends BaseAction
             || $hook === 'upload.php'
             || $hook === 'settings_page_' . AdminMenu::MENU_SLUG
         ) {
-            wp_enqueue_script('jquery');
+            $this->enqueueScript('jquery');
             if (TINYGA_DEV_MODE === true) {
-                wp_enqueue_script('tinyga-async-js', Utils::asset('js/async.js'));
-                wp_enqueue_script('tinyga-tipsy-js', Utils::asset('js/jquery.tipsy.js'), ['jquery']);
-                wp_enqueue_script('tinyga-modal-js', Utils::asset('js/jquery.modal.min.js'), ['jquery']);
-                wp_enqueue_script('tinyga-ajax-js', Utils::asset('js/ajax.js'), ['jquery']);
-                wp_enqueue_style('tinyga-admin-css', Utils::asset('css/admin.css'));
-                wp_enqueue_style('tinyga-tipsy-css', Utils::asset('css/tipsy.css'));
-                wp_enqueue_style('tinyga-modal-css', Utils::asset('css/jquery.modal.css'));
-                $localize_script_handle = 'tinyga-ajax-js';
+                $this->enqueueScript('tinyga-async-js', 'js/async.js');
+                $this->enqueueScript('tinyga-tipsy-js', 'js/jquery.tipsy.js', ['jquery']);
+                $this->enqueueScript('tinyga-modal-js', 'js/jquery.modal.min.js', ['jquery']);
+                $this->enqueueScript('tinyga-ajax-js', 'js/ajax.js', ['jquery']);
+                $this->enqueueStyle('tinyga-admin-css', 'css/admin.css');
+                $this->enqueueStyle('tinyga-tipsy-css', 'css/tipsy.css');
+                $this->enqueueStyle('tinyga-modal-css', 'css/jquery.modal.css');
+                $localize_handle = 'tinyga-ajax-js';
             } else {
-                wp_enqueue_script('tinyga-js', Utils::asset('js/dist/tinyga.min.js'), ['jquery']);
-                wp_enqueue_style('tinyga-css', Utils::asset('css/dist/tinyga.min.css'));
-                $localize_script_handle = 'tinyga-js';
+                $this->enqueueScript('tinyga-js', 'js/dist/tinyga.min.js', ['jquery']);
+                $this->enqueueStyle('tinyga-css', 'css/dist/tinyga.min.css');
+                $localize_handle = 'tinyga-js';
             }
 
-            wp_localize_script($localize_script_handle, 'ajax_object', ['ajax_url' => admin_url('admin-ajax.php')]);
-            wp_localize_script($localize_script_handle, 'tinyga_settings', $this->tinyga_options->toArray());
-            wp_localize_script($localize_script_handle, 'tinyga_bulk_modal', [
+            $this->localizeScript($localize_handle, 'ajax_object', ['ajax_url' => $this->adminUrl('admin-ajax.php')]);
+            $this->localizeScript($localize_handle, 'tinyga_settings', $this->tinyga_options->toArray());
+            $this->localizeScript($localize_handle, 'tinyga_bulk_modal', [
                 'modal' => $this->renderModalView(),
                 'modal_row' => $this->renderModalRowView(),
             ]);

@@ -45,45 +45,6 @@ class Utils
     }
 
     /**
-     * @param $asset
-     *
-     * @return string
-     */
-    public static function asset($asset)
-    {
-        return plugins_url('public/' . ltrim($asset, '/\\'), TINYGA_PLUGIN_FILE);
-    }
-
-    /**
-     * @param $attachment_id
-     * @param bool $unfiltered
-     *
-     * @return string
-     */
-    public static function getAttachedFile($attachment_id, $unfiltered = false)
-    {
-        return wp_normalize_path(get_attached_file($attachment_id, $unfiltered));
-    }
-
-    /**
-     * @param null $time
-     *
-     * @return array
-     */
-    public static function getWpUploadDir($time = null)
-    {
-        $wp_upload_dir = wp_upload_dir($time);
-
-        foreach (['basedir', 'path'] as $key) {
-            if (isset($wp_upload_dir[$key])) {
-                $wp_upload_dir[$key] = wp_normalize_path($wp_upload_dir[$key]);
-            }
-        }
-
-        return $wp_upload_dir;
-    }
-
-    /**
      * @param $size
      * @param int $precision
      *
@@ -111,31 +72,5 @@ class Utils
     {
         $keys = array_keys($array);
         return (int) preg_grep($pattern, $keys);
-    }
-
-    public static function getImageSizes($keys_only = false)
-    {
-        global $_wp_additional_image_sizes;
-
-        $sizes = [];
-
-        foreach (get_intermediate_image_sizes() as $_size) {
-            if (isset($_wp_additional_image_sizes[$_size])) {
-                $width = $_wp_additional_image_sizes[$_size]['width'];
-                $height = $_wp_additional_image_sizes[$_size]['height'];
-                $crop = $_wp_additional_image_sizes[$_size]['crop'];
-            } else {
-                $width = get_option("{$_size}_size_w");
-                $height = get_option("{$_size}_size_h");
-                $crop = (bool) get_option("{$_size}_crop");
-            }
-            $sizes[$_size] = [
-                'width' => $width,
-                'height' => $height,
-                'crop' => $crop,
-            ];
-        }
-
-        return $keys_only ? array_keys($sizes) : $sizes;
     }
 }

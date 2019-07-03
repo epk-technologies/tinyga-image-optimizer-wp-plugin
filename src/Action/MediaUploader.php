@@ -9,6 +9,7 @@ use Tinyga\ImageOptimizer\OptimizationResult;
 use Tinyga\Manager\ImageOptimizationManager;
 use Tinyga\Model\TinygaImageMeta;
 use Tinyga\Model\TinygaThumbMeta;
+use Tinyga\Model\WPAttachmentMeta;
 use Tinyga\Utils;
 
 class MediaUploader extends StatsSummary
@@ -29,11 +30,11 @@ class MediaUploader extends StatsSummary
      */
     protected function registerActions()
     {
-        add_action('wp_ajax_tinyga_request', [&$this, 'tinygaMediaLibraryAjaxCallback']);
+        $this->addAction('wp_ajax_tinyga_request', [&$this, 'tinygaMediaLibraryAjaxCallback']);
 
         if ($this->tinyga_options->isAutoOptimize()) {
-            add_action('add_attachment', [&$this, 'tinygaMediaUploaderCallback']);
-            add_filter('wp_generate_attachment_metadata', [&$this, 'optimizeThumbnails']);
+            $this->addAction('add_attachment', [&$this, 'tinygaMediaUploaderCallback']);
+            $this->addFilter('wp_generate_attachment_metadata', [&$this, 'optimizeThumbnailsFilter']);
         }
     }
 
@@ -43,11 +44,11 @@ class MediaUploader extends StatsSummary
     public function tinygaMediaLibraryAjaxCallback()
     {
         $image_id = (int) $_POST['id'];
-        $quality = isset($_POST['quality']) ? $_POST['quality'] : null;
+        $quality = isset($_POST['quality']) ? (int) $_POST['quality'] : null;
 
-        if (wp_attachment_is_image($image_id)) {
+        if ($this->attachmentIsImage($image_id)) {
 
-            $image_path = Utils::getAttachedFile($image_id);
+            $image_path = $this->getAttachedFile($image_id);
             $optimize_main_image = $this->tinyga_options->isOptimizeMainImage();
             $api_key = $this->tinyga_options->getApiKey();
 
@@ -69,16 +70,16 @@ class MediaUploader extends StatsSummary
                 }
 
                 // get metadata for thumbnails
-                $image_data = wp_get_attachment_metadata($image_id);
+                $attachment_meta = $this->getAttachmentMeta($image_id);
 
                 if (!$thumbs_optimized) {
-                    $this->optimizeThumbnails($image_data, $image_id, $quality);
+                    $this->optimizeThumbnails($attachment_meta, $image_id, $quality);
                 } else {
                     // re-optimize thumbs if optimization quality has changed
                     $optimization_quality = $tinyga_thumbs_data[0]->getOptimizationQuality();
                     if ($optimization_quality !== $quality) {
-                        wp_generate_attachment_metadata($image_id, $image_path);
-                        $this->optimizeThumbnails($image_data, $image_id, $quality);
+                        $this->generateAttachmentMeta($image_id, $image_path);
+                        $this->optimizeThumbnails($attachment_meta, $image_id, $quality);
                     }
                 }
 
@@ -107,11 +108,12 @@ class MediaUploader extends StatsSummary
                 if ($this->replaceImage($image_path, $optimization_result->getOptimizedImage())) {
 
                     if ($image_meta->getWidth() && $image_meta->getHeight()) {
-                        /** @var array $image_data */
-                        $image_data = wp_get_attachment_metadata($image_id);
-                        $image_data['width'] = $image_meta->getWidth();
-                        $image_data['height'] = $image_meta->getHeight();
-                        wp_update_attachment_metadata($image_id, $image_data);
+                        $attachment_meta = $this->getAttachmentMeta($image_id);
+                        if ($attachment_meta) {
+                            $attachment_meta->setWidth($image_meta->getWidth());
+                            $attachment_meta->setHeight($image_meta->getHeight());
+                            $this->updateAttachmentMeta($image_id, $attachment_meta);
+                        }
                     }
 
                     // store tinyga info to DB
@@ -134,8 +136,8 @@ class MediaUploader extends StatsSummary
                 }
             } else {
                 // get metadata for thumbnails
-                $image_data = wp_get_attachment_metadata($image_id);
-                $this->optimizeThumbnails($image_data, $image_id, $quality);
+                $attachment_meta = $this->getAttachmentMeta($image_id);
+                $this->optimizeThumbnails($attachment_meta, $image_id, $quality);
 
                 // optimize thumbnails, store that data too. This can be unset when there are no thumbs
                 $tinyga_thumbs_data = $this->getThumbsMeta($image_id, true);
@@ -149,7 +151,7 @@ class MediaUploader extends StatsSummary
                 echo json_encode($data);
             }
         }
-        wp_die();
+        $this->WPDie();
     }
 
     /**
@@ -163,9 +165,9 @@ class MediaUploader extends StatsSummary
             return;
         }
 
-        if (wp_attachment_is_image($image_id)) {
+        if ($this->attachmentIsImage($image_id)) {
 
-            $image_path = Utils::getAttachedFile($image_id);
+            $image_path = $this->getAttachedFile($image_id);
             $image_backup_path = $image_path . '_tinyga_' . md5($image_path);
             $backup_created = copy($image_path, $image_backup_path);
             $original_image = new ImageFile($backup_created ? $image_backup_path : $image_path);
@@ -208,19 +210,30 @@ class MediaUploader extends StatsSummary
     }
 
     /**
-     * @param $image_data
+     * @param array $image_data
+     *
+     * @return array
+     */
+    public function optimizeThumbnailsFilter($image_data)
+    {
+        $attachment_meta = new WPAttachmentMeta($image_data);
+        return $this->optimizeThumbnails($attachment_meta)->toArray();
+    }
+
+    /**
+     * @param WPAttachmentMeta $attachment_meta
      * @param null $image_id
      * @param null $quality
      *
-     * @return mixed
+     * @return WPAttachmentMeta
      */
-    public function optimizeThumbnails($image_data, $image_id = null, $quality = null)
+    public function optimizeThumbnails($attachment_meta, $image_id = null, $quality = null)
     {
         if (empty($image_id)) {
             global $wpdb;
             $query = $wpdb->prepare(
                 "SELECT post_id FROM {$wpdb->postmeta} WHERE meta_value = %s LIMIT 1",
-                $image_data[TinygaThumbMeta::FILE]
+                $attachment_meta->getFile()
             );
             $post = $wpdb->get_row($query);
             $image_id = $post->post_id;
@@ -230,7 +243,7 @@ class MediaUploader extends StatsSummary
         $image_backup_path = $tinyga_meta->getOptimizedBackupFile();
 
         if ($image_backup_path) {
-            $original_image_path = Utils::getAttachedFile($image_id);
+            $original_image_path = $this->getAttachedFile($image_id);
             if (copy($image_backup_path, $original_image_path)) {
                 unlink($image_backup_path);
                 $tinyga_meta->setOptimizedBackupFile(null);
@@ -239,28 +252,28 @@ class MediaUploader extends StatsSummary
         }
 
         if (!$this->tinyga_options->getSizes()) {
-            $sizes = Utils::getImageSizes(true);
+            $sizes = $this->getImageSizes(true);
             $this->tinyga_options->setSizes($sizes);
         }
 
         // when resizing has taken place via API, update the post metadata accordingly
         if ($tinyga_meta->getWidth() && $tinyga_meta->getHeight()) {
-            $image_data['width'] = $tinyga_meta->getWidth();
-            $image_data['height'] = $tinyga_meta->getHeight();
+            $attachment_meta->setWidth($tinyga_meta->getWidth());
+            $attachment_meta->setHeight($tinyga_meta->getHeight());
         }
 
-        $path_parts = pathinfo($image_data['file']);
+        $path_parts = pathinfo($attachment_meta->getFile());
 
         // e.g. 04/02, for use in getting correct path or URL
         $upload_subdir = $path_parts['dirname'];
 
-        $upload_dir = Utils::getWpUploadDir();
+        $upload_dir = $this->getUploadDir();
 
         // all the way up to /uploads
         $upload_base_path = $upload_dir['basedir'];
         $upload_full_path = $upload_base_path . '/' . $upload_subdir;
 
-        $sizes = isset($image_data['sizes']) ? $image_data['sizes'] : [];
+        $sizes = $attachment_meta->getSizes();
 
         if (!empty($sizes)) {
             $sizes_to_optimize = $this->getSizesToOptimize();
@@ -306,7 +319,7 @@ class MediaUploader extends StatsSummary
         if (!empty($thumbs_optimized_store)) {
             $this->updateThumbsMeta($image_id, $thumbs_optimized_store);
         }
-        return $image_data;
+        return $attachment_meta;
     }
 
     /**
@@ -330,7 +343,8 @@ class MediaUploader extends StatsSummary
         $image_meta->setTaskId($result->getTaskId());
 
         if ($image_id) {
-            $image_meta->setMeta(wp_get_attachment_metadata($image_id));
+            $attachment_meta = $this->getAttachmentMeta($image_id);
+            $image_meta->setMeta($attachment_meta ? $attachment_meta->toArray() : null);
         }
 
         $optimized_image = $result->getOptimizedImage();
