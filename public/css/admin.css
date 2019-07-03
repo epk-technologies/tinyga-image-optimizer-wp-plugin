@@ -1,0 +1,353 @@
+.head_cell{
+	float:left;
+	width:10em;
+	height: 20px;
+	background-color:#F0F0F0;
+	padding-top: 5px;
+}
+.head_file_name{
+	float:left;
+	width:30em;
+	height: 20px;
+	background-color:#F0F0F0;
+	padding-top: 5px;
+	padding-left: 2px;
+}
+.item_cell{
+	float:left;
+	width:10em;
+	height: 20px;
+	background-color:#F8F8F8 ;
+	padding-top: 5px;
+	margin-top: 5px;
+}
+.item_file_name{
+	float:left;
+	width:30em;
+	height: 20px;
+	background-color:#F8F8F8 ;
+	padding-top: 5px;
+	padding-left: 2px;
+	margin-top: 5px;
+}
+#tinyga_loading{
+	float: left;
+	clear: left;
+}
+
+.tinyga_req, .tinyga_req_bulk {
+	border: none;
+	color: #fff;
+	padding: 3px 8px 4px;
+	font-size: 11px;
+	background: #3498DB;
+	-webkit-border-radius: 2px;
+	-moz-border-radius: 2px;
+	border-radius: 2px;
+	cursor: pointer;
+	transition: all 0.15s;
+}
+
+.tinyga_req:hover,
+.tinyga_req_bulk:hover {
+	background: #2881BD;
+}
+
+.tinyga_req {
+	margin-right: 2px;
+}
+
+.tinyga_req_bulk {
+	font-size: 16px;
+	margin: 0 auto;
+	width: 180px;
+	padding: 10px 0;
+	display: block;
+}
+
+td.tinyga-bulk-filename {
+	width: 360px;
+    max-width: 360px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+td.tinyga-optimized-size {
+	width: 170px;
+}
+.buttonWrap {
+	position: relative;
+	margin-bottom: 5px;
+}
+.apiValid {
+	left: 0;
+	display: inline-block;
+	width: 16px;
+	height: 16px;
+	top: 3px;
+	position: absolute;
+}
+.apiInvalid {
+	left: 0;
+	display: inline-block;
+	width: 16px;
+	height: 16px;
+	top: 2px;
+	position: absolute;
+}
+p.apiStatus {
+	padding-left: 26px;
+	position: relative;
+	width: 400px;
+}
+.tinygaSpinner {
+	display: none;
+	position: absolute;
+	width: 20px;
+	height: 20px;
+	top: 1px;
+	background: url(../images/spinner.gif) no-repeat 0 0;
+}
+.tinygaBulkSpinner {
+	display: none;
+	padding: 0;
+	margin: 0;
+	width: 20px;
+	height: 20px;
+	background: url(../images/spinner.gif) no-repeat 0 0;
+}
+.visible {
+	display: inline-block;
+}
+.tinygaErrorWrap {
+	margin-top: 10px;
+	margin-bottom: 4px;
+}
+.noSavings {
+	margin-left: 2px;
+}
+.tinygaError {
+	margin-left: 2px;
+	font-weight: bold;
+	color: #dd3d36;
+}
+.tinygaBulkHeader {
+	font-size: 16px;
+	margin-bottom: 10px;
+	font-weight: bold;
+	padding: 15px 20px;
+	border-bottom: 1px solid #ddd;
+	margin: 0;
+	background: #fafafa;
+	position: relative;
+}
+
+.tinygaBulkHeader span {
+	position: absolute;
+	top: 5px;
+	right: 15px;
+	font-size: 30px;
+	color: #777;
+}
+
+.tinygaBulkHeader span:hover {
+	color: #222;
+}
+
+#tinyga-bulk-modal {
+	position: absolute !important;
+	top: 100px;
+	width: 785px;
+	padding: 0 0 20px 0;
+}
+#tinyga-bulk-modal label {
+	margin-bottom: 11px;
+}
+
+#tinyga-bulk {
+	width: 770px;
+	margin: 0 auto 20px;
+	border-collapse: collapse;
+}
+
+#tinyga-bulk td {
+	border: 1px solid #ddd;
+	padding: 5px 10px;
+}
+
+#tinyga-bulk tr:nth-child(odd) {
+  background-color: #eee;
+}
+
+#tinyga-bulk-modal .the-following {
+	margin: 0;
+	text-align: center;
+	padding: 15px 0;
+}
+
+.tinyga-bulk-header td {
+	font-weight: bold;
+	font-size: 13px;
+	padding: 7px 10px !important;
+	background: #ddd;
+	color: #212121;
+	border: 1px solid #ccc !important;
+}
+
+td.tinyga-optimized-size {
+	text-align: left;
+}
+tr.tinyga-item-row td {
+	padding: 2px;
+	height: 20px;
+}
+span.tinyga-bulk-choose-type {
+	font-weight: bold;
+	margin-right: 5px;
+}
+.close-tinyga-bulk {
+	font-size: 12px;
+	margin-left: 10px;
+	font-weight: bold;
+	cursor: pointer;
+}
+
+.radiosWrap {
+	width: 100%;
+	text-align: center;
+	padding: 15px 0;
+	border-bottom: 1px solid #ddd;
+}
+
+.radiosWrap p {
+	padding: 0;
+	margin: 0 0 5px 0;
+	font-weight: bold;
+}
+
+.radiosWrap input[type="radio"] {
+	margin-top: -1px;
+	vertical-align: middle;
+}
+
+.tinyga-bulk-small {
+	font-size: 12px;
+	display: inline-block;
+	margin: 0 0 4px 4px;
+}
+small.tinygaReset {
+	text-decoration: underline;
+	cursor: pointer;
+	display: inline-block;
+}
+.resetSpinner {
+	display: inline-block;
+	margin-right: 3px;
+	margin-top: 4px;
+	vertical-align: baseline;
+	width: 20px;
+	height: 20px;
+	background: url(../images/spinner.gif) no-repeat 0 0;
+	background-size: 10px;
+}
+h1.tinyga-admin-section-title {
+	margin-bottom: 30px;
+}
+.tinyga_show_reset {
+	margin-right: 11px;
+}
+small.tinygaWhatsThis {
+	font-size: 9px;
+}
+span.tinyga-reset-all {
+	font-size: 11px;
+}
+span.tinyga-reset-all.enabled {
+	text-decoration: underline;
+	cursor: pointer;
+}
+td.tinygaAdvancedSettings {
+	padding: 20px 0 0 0 !important;
+}
+td.tinygaAdvancedSettingsDescription {
+	padding: 0;
+	padding: 10px 0 !important;
+}
+td.tinygaAdvancedSettings h3 {
+	margin-bottom: 2px;
+}
+td.tinygaAdvancedSettings h3 > .tinyga-advanced-settings-label:hover {
+	cursor: pointer;
+	color: #45bbe6;
+	-webkit-user-select: none;
+   	-khtml-user-select: none;
+   	-moz-user-select: none;
+   	-ms-user-select: none;
+   	user-select: none;
+}
+td.tinygaAdvancedSettings h3 span.tinyga-advanced-toggle {
+	color: #45bbe6;
+	font-size: 10px;
+}
+.tinyga-plus-minus {
+	cursor: pointer;
+	line-height: 24px;
+	display: inline-block;
+	width: 20px;
+	-webkit-user-select: none;
+   	-khtml-user-select: none;
+   	-moz-user-select: none;
+   	-ms-user-select: none;
+   	user-select: none;
+}
+.tinyga-advanced-settings {
+	/*display: none;*/
+}
+#tinygaSettings .form-table {
+	margin-bottom: 30px;
+}
+
+#tinygaSettings .form-table th {
+	width: 270px;
+	border-bottom: 1px solid #ddd;
+	padding: 25px 0;
+}
+
+#tinygaSettings .form-table td {
+	border-bottom: 1px solid #ddd;
+	padding: 25px 0;
+}
+
+#tinygaSettings .form-table .no-border td,
+#tinygaSettings .form-table .no-border th {
+	border: none;
+}
+
+#tinygaSettings .form-table .with-tip td,
+#tinygaSettings .form-table .with-tip th {
+	border-bottom: none;
+	padding-bottom: 10px;
+}
+
+.tip td {
+    padding: 10px 0 20px 0 !important;
+}
+
+.tip td div {
+	border: 1px solid #BCE8F1;
+    background: #D9EDF7;
+    padding: 5px 10px;
+    line-height: 20px;
+    font-size: 12px;
+}
+
+.tinyga.error.settings-error, .tinyga.updated.settings-error  {
+	margin-bottom: 30px;
+}
+.tinyga-item-details {
+	cursor: pointer;
+	text-decoration: underline;
+}
+.tinyga_detailed_results_wrap {
+	display: inline-block;
+}
